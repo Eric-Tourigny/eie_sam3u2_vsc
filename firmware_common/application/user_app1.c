@@ -92,6 +92,16 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  LCDCOMMAND(LCD_CONTROL_COMMAND | 0x1);
+  LCDCommand(0x1);
+  LCDCommand(0x1);
+  LCDCommand(0x1);
+  LCDCommand(0x1);
+  LCDCommand(0x1);
+
+  const u8 u8_message[2] = {1, 0};
+  LCDMessage(LINE1_START_ADDR, u8_message);
+
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -155,5 +165,5 @@ static void UserApp1SM_Error(void)
 
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-/* End of File                                                                                                        */
+/* End of File                                                                                                         */
 /*--------------------------------------------------------------------------------------------------------------------*/
