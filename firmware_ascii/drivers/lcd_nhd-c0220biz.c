@@ -160,26 +160,49 @@ void LcdMessage(u8 u8Address_, u8* pu8Message_)
 } /* end LcdMessage() */
 
 
+/*!---------------------------------------------------------------------------------------------------------------------
+@fn void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_)
 
+@brief Defines a custom character in LCD CGRAM
 
-void CreateCustomChar(u8 u8charNum, u8* u8bitMap)
-{ 
+Custom characters consist of eight bytes, whose five least significant bits
+determine whether that pixel will be opaque (1) or transparent (0).
+
+Only eight custom characters may be defined on the LCD's CGRAM,
+which we number 1 to 8. Custom characters may be printed using LCD message
+by passing 0x01 to 0x08 as the character. Custom character 8 is equivalent to 
+0 for the LCD, but this conflicts with null terminators in LCD Message.
+
+Requires:
+- LCD is intialized
+- LCD is in function table 00 (eg. use LcdCommand(LCD_FUNCTION_CMD))
+
+@param u8charNum_ The number of the character, 1 through 8
+@param u8bitMap_ The eight byte representation of the custom character
+
+Promises:
+- Message to set the CGRAM address in the LCD is queued, then
+  custom character data is queued
+*/
+void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_)
+{
   u8 u8Index; 
-  static u8 au8LCDMessage[U8_LCD_MESSAGE_OVERHEAD_SIZE + U8_LCD_MAX_MESSAGE_SIZE] = {LCD_CONTROL_DATA};
+  static u8 au8LCDCustomCharacter[U8_LCD_MESSAGE_OVERHEAD_SIZE + U8_LCD_CUSTOM_CHAR_SIZE] = {LCD_CONTROL_DATA};
   
-  /* Set the cursor to the correct address */
-  LcdCommand(0x40 | u8charNum);
+  /* Set the cursor to the correct address, OR means 8 sets address the same as 0*/
+  LcdCommand(LCD_CGRAM_ADDRESS_CMD | (u8charNum_ * U8_LCD_CUSTOM_CHAR_SIZE));
   
   /* Fill the message */
-  for(int u8Index = 1; u8Index < 8; u8Index++)
+  u8Index = 1;
+  while(u8Index <= U8_LCD_CUSTOM_CHAR_SIZE)
   {
-    au8LCDMessage[u8Index] = *u8bitMap++;
+    au8LCDCustomCharacter[u8Index++] = *u8bitMap_++;
   }
-    
+  
   /* Queue the message */
-  TwiWriteData(U8_LCD_ADDRESS, u8Index, au8LCDMessage, TWI_STOP);
+  TwiWriteData(U8_LCD_ADDRESS, U8_LCD_CUSTOM_CHAR_SIZE, au8LCDCustomCharacter, TWI_STOP);
 
-} /* end LcdMessage() */
+} /* end CreateCustomChar() */
 
 
 

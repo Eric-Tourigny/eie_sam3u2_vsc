@@ -33,6 +33,7 @@ Constants / Definitions
                                                                     display assuming message starts at far left of screen
                                                                     Only 20 characters can be displayed and remaining characters 
                                                                     will be off the screen but still in LCD RAM */
+#define U8_LCD_CUSTOM_CHAR_SIZE           (u8)8                /*!< @brief Number of bytes for a custom character, stored in CGRAM*/
 
 
 /* LCD Commands
@@ -56,6 +57,9 @@ Constants / Definitions
 
 #define		LCD_ADDRESS_CMD			(u8)0x80		/*!< @brief Root literal to set the cursor position
 																			         Bottom 6 bits are address (0x00-0x27 and 0x40-0x67) */
+#define     LCD_CGRAM_ADDRESS_CMD   (u8)0x40    /*!< @brief Root literal to set adress in CGRAM
+                                                   bottom 6 bits are the address (0x40 to 0x47 for first character,
+                                                   0x48 to 0x4E for the second, etc.), requires function table 01*/
 
 #define		LINE1_START_ADDR		(u8)0x00 		/*!< @brief Constant for defining cursor location for LINE1 */
 #define		LINE2_START_ADDR  	(u8)0x40 		/*!< @brief Constant for defining cursor location for LINE2 */
@@ -81,7 +85,7 @@ RS			R/W				Operation
 1				 0				Data Write
 1				 1				Data Read
 
-However, the I²C implementation of the LCD does not support reading data
+However, the Iï¿½C implementation of the LCD does not support reading data
 back from the module.  Therefore, the R/W bit is always 0 which leaves
 only RS to selection Instruction (Command) or Data mode.
 
@@ -112,6 +116,7 @@ space can be used for scrolling displays.
 void LcdCommand(u8 u8Command_);
 void LcdClearChars(u8 u8Address_, u8 u8CharactersToClear_);
 void LcdMessage(u8 u8Address_, u8* pu8Message_);
+void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_);
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/

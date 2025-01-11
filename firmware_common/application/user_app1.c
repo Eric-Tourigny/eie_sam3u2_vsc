@@ -92,50 +92,14 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  /*
-  const u8 custom_char[8] = {0x10, 0x7};
-  CreateCustomChar(0, custom_char);
-
-
-
-  const u8 u8_message[] = {1, 2, 3, 4, 5, 6, 7, 8, 'f', 0x10, 0};
-  LcdMessage(LINE1_START_ADDR, u8_message);
-  */
-  const u8 u8customChar[16] = {0x40, 0x10, 0x10, 0x15, 0x81, 0x01, 0x7, 0x7, 0x8, 0x4, 0x3, 0x1, 0x1, 0x2};
-  const u8 u8message[] = {0x40, 0, 'e', 'n', 'd'};
+  const u8 u8customChar[16] = {0x04, 0x05, 0x15, 0x15, 0x17, 0x1C, 0x04, 0x04};
+  const u8 u8message[] = {8, '\0'};
 
   LcdCommand(LCD_CLEAR_CMD);
-  LcdCommand(LCD_FUNCTION_CMD);
-  LcdCommand(0x40);
-  TwiWriteData(U8_LCD_ADDRESS, 8, u8customChar, TWI_STOP);
+  LcdCommand(LCD_FUNCTION_CMD);     //required for custom characters to function
 
-  LcdCommand(0x83);
-  TwiWriteData(U8_LCD_ADDRESS, 5, u8message, TWI_STOP);
-
-  
-
-/*
-  LcdCommand(0x41);
-  TwiWriteData(U8_LCD_ADDRESS, 8, u8customChar, TWI_STOP);
-*/
-
-/*
-  LcdCommand(LCD_FUNCTION_CMD);
-
-
-
-  LcdCommand(0x83);
-  TwiWriteData(0x3C, 4, u8message, TWI_STOP);
-*/
-
-  /*
-  LcdCommand(0x40);
-  TwiWriteData(U8_LCD_ADDRESS, 16, u8customChar, TWI_STOP);
-
-
+  CreateCustomChar(8, u8customChar);
   LcdMessage(LINE1_START_ADDR, u8message);
-  LcdCommand(0x4);
-  */
   
 
   /* If good initialization, set state to Idle */
