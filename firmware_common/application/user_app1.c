@@ -101,17 +101,42 @@ void UserApp1Initialize(void)
   const u8 u8_message[] = {1, 2, 3, 4, 5, 6, 7, 8, 'f', 0x10, 0};
   LcdMessage(LINE1_START_ADDR, u8_message);
   */
-  const u8 u8customChar[8] = {0x10, 0x10, 0x11, 0x07, 0x08, 0x9};
-  const u8 u8message[] = {'e', 'n', 'd', '\0'};
+  const u8 u8customChar[16] = {0x40, 0x10, 0x10, 0x15, 0x81, 0x01, 0x7, 0x7, 0x8, 0x4, 0x3, 0x1, 0x1, 0x2};
+  const u8 u8message[] = {0x40, 0, 'e', 'n', 'd'};
 
   LcdCommand(LCD_CLEAR_CMD);
+  LcdCommand(LCD_FUNCTION_CMD);
+  LcdCommand(0x40);
+  TwiWriteData(U8_LCD_ADDRESS, 8, u8customChar, TWI_STOP);
+
+  LcdCommand(0x83);
+  TwiWriteData(U8_LCD_ADDRESS, 5, u8message, TWI_STOP);
+
+  
 
 /*
   LcdCommand(0x41);
   TwiWriteData(U8_LCD_ADDRESS, 8, u8customChar, TWI_STOP);
 */
 
+/*
+  LcdCommand(LCD_FUNCTION_CMD);
+
+
+
+  LcdCommand(0x83);
+  TwiWriteData(0x3C, 4, u8message, TWI_STOP);
+*/
+
+  /*
+  LcdCommand(0x40);
+  TwiWriteData(U8_LCD_ADDRESS, 16, u8customChar, TWI_STOP);
+
+
   LcdMessage(LINE1_START_ADDR, u8message);
+  LcdCommand(0x4);
+  */
+  
 
   /* If good initialization, set state to Idle */
   if( 1 )
