@@ -92,15 +92,26 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  LCDCOMMAND(LCD_CONTROL_COMMAND | 0x1);
-  LCDCommand(0x1);
-  LCDCommand(0x1);
-  LCDCommand(0x1);
-  LCDCommand(0x1);
-  LCDCommand(0x1);
+  /*
+  const u8 custom_char[8] = {0x10, 0x7};
+  CreateCustomChar(0, custom_char);
 
-  const u8 u8_message[2] = {1, 0};
-  LCDMessage(LINE1_START_ADDR, u8_message);
+
+
+  const u8 u8_message[] = {1, 2, 3, 4, 5, 6, 7, 8, 'f', 0x10, 0};
+  LcdMessage(LINE1_START_ADDR, u8_message);
+  */
+  const u8 u8customChar[8] = {0x10, 0x10, 0x11, 0x07, 0x08, 0x9};
+  const u8 u8message[] = {'e', 'n', 'd', '\0'};
+
+  LcdCommand(LCD_CLEAR_CMD);
+
+/*
+  LcdCommand(0x41);
+  TwiWriteData(U8_LCD_ADDRESS, 8, u8customChar, TWI_STOP);
+*/
+
+  LcdMessage(LINE1_START_ADDR, u8message);
 
   /* If good initialization, set state to Idle */
   if( 1 )

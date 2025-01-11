@@ -160,6 +160,31 @@ void LcdMessage(u8 u8Address_, u8* pu8Message_)
 } /* end LcdMessage() */
 
 
+
+
+void CreateCustomChar(u8 u8charNum, u8* u8bitMap)
+{ 
+  u8 u8Index; 
+  static u8 au8LCDMessage[U8_LCD_MESSAGE_OVERHEAD_SIZE + U8_LCD_MAX_MESSAGE_SIZE] = {LCD_CONTROL_DATA};
+  
+  /* Set the cursor to the correct address */
+  LcdCommand(0x40 | u8charNum);
+  
+  /* Fill the message */
+  for(int u8Index = 1; u8Index < 8; u8Index++)
+  {
+    au8LCDMessage[u8Index] = *u8bitMap++;
+  }
+    
+  /* Queue the message */
+  TwiWriteData(U8_LCD_ADDRESS, u8Index, au8LCDMessage, TWI_STOP);
+
+} /* end LcdMessage() */
+
+
+
+
+
 /*!---------------------------------------------------------------------------------------------------------------------
 @fn void LcdClearChars(u8 u8Address_, u8 u8CharactersToClear_)
 
