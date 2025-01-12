@@ -161,6 +161,41 @@ void LcdMessage(u8 u8Address_, u8* pu8Message_)
 
 
 /*!---------------------------------------------------------------------------------------------------------------------
+@fn void LcdPutChar(u8 u8Address_, u8 u8Char_)
+
+@brief Sends a single character to the LCD to be printed at the address specified.  
+
+e.g. 
+LcdPutChar(LINE1_START_ADDR, 'a');
+
+Requires:
+- LCD is initialized
+
+@param u8Address_ is desired starting address on the display
+@param u8Char the code for the character (1-8 for custom characters)
+
+Promises:
+- Message to set cursor address in the LCD is queued, then character 
+  is queued to the LCD to be displayed. 
+
+*/
+void LcdPutChar(u8 u8Address_, u8 u8Char_)
+{ 
+  static u8 au8LCDMessage[2] = {LCD_CONTROL_DATA};
+  
+  /* Set the cursor to the correct address */
+  LcdCommand(LCD_ADDRESS_CMD | u8Address_);
+  
+  /* Fill the message */
+  au8LCDMessage[1] = u8Char_;
+    
+  /* Queue the message */
+  TwiWriteData(U8_LCD_ADDRESS, 2, au8LCDMessage, TWI_STOP);
+
+} /* end LcdMessage() */
+
+
+/*!---------------------------------------------------------------------------------------------------------------------
 @fn void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_)
 
 @brief Defines a custom character in LCD CGRAM

@@ -55,7 +55,15 @@ static void UserApp1SM_Error(void);
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
+#define   U8_SUBFRAME_MILLISECONDS      (u8)200 /*How many milliseconds between each subframe*/
+#define   U8_FRAME_SUBFRAMES            (u8)5   /*How many subframes in each frame*/
 
+#define   DINO_TOP_NUM          (u8)1   /*Custom character number for the top of the dino (top leftmost tile)*/
+#define   DINO_BOTTOM_NUM       (u8)2   /*Custom character number for the bottom of the dino (top rightmost tile)*/
+#define   CACTUS_FRONT_NUM      (u8)3   /*Custom character number for the front of a cactus*/
+#define   CACTUS_BACK_NUM       (u8)4   /*Custom character number for the back of a cactus*/
+
+#define   CACTUS_PATTERN        {0x04, 0x05, 0x15, 0x15, 0x17, 0x1C, 0x04, 0x04}    /*Custom character pattern for the cactus*/
 
 #endif /* __USER_APP1_H */
 

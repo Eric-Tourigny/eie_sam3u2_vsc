@@ -61,6 +61,7 @@ Variable names shall start with "UserApp1_<type>" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type UserApp1_pfStateMachine;               /*!< @brief The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout counter used across states */
+static u8 UserApp1_u8cactusBitmaps[11][8] = {{}, {}, {}, {}, {}, CACTUS_PATTERN, {}, {}, {}, {}, {}};
 
 
 /**********************************************************************************************************************
@@ -92,15 +93,18 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  const u8 u8customChar[16] = {0x04, 0x05, 0x15, 0x15, 0x17, 0x1C, 0x04, 0x04};
-  const u8 u8message[] = {8, '\0'};
 
   LcdCommand(LCD_CLEAR_CMD);
   LcdCommand(LCD_FUNCTION_CMD);     //required for custom characters to function
 
-  CreateCustomChar(8, u8customChar);
-  LcdMessage(LINE1_START_ADDR, u8message);
-  
+  for (u8 u8BitmapN = 4; u8BitmapN != 0xFF; u8BitmapN--)
+    for (u8 u8InnerPos = 0; u8InnerPos < 8; u8InnerPos++)
+      UserApp1_u8cactusBitmaps[u8BitmapN][u8InnerPos] = UserApp1_u8cactusBitmaps[u8BitmapN + 1][u8InnerPos] >> 1;
+
+  for (u8 u8BitmapN = 6; u8BitmapN <= 10; u8BitmapN++)
+    for (u8 u8InnerPos = 0; u8InnerPos < 8; u8InnerPos++)
+      UserApp1_u8cactusBitmaps[u8BitmapN][u8InnerPos] = (UserApp1_u8cactusBitmaps[u8BitmapN - 1][u8InnerPos] << 1) & 0x1F;
+
 
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -150,7 +154,46 @@ State Machine Function Definitions
 /* What does this state do? */
 static void UserApp1SM_Idle(void)
 {
-     
+  static u8 u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
+  if(u8millisecondCount-- == 0)
+  {
+    static u8 u8topLine[21];
+    static u8 u8cactusPositions[22] = {16, 0xFF};
+
+    static u8 u8cactusPattern[8] = CACTUS_PATTERN;
+    static u8 u8cactusFront[8] = CACTUS_PATTERN;
+    static u8 u8cactusBack[8] = CACTUS_PATTERN;
+
+
+    static u8 u8subframeCount = U8_FRAME_SUBFRAMES;
+    if (u8subframeCount-- == 0)
+    {
+      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
+      {
+        LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index], ' ');
+        u8cactusPositions[u8Index]--;
+      }
+      CreateCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[5]);
+      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
+      {
+        LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index], CACTUS_BACK_NUM);
+      }
+      CreateCustomChar(CACTUS_FRONT_NUM, UserApp1_u8cactusBitmaps[0]);
+      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
+      {
+        LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index] - 1, CACTUS_FRONT_NUM);
+      }
+
+      u8subframeCount = U8_FRAME_SUBFRAMES;
+    }
+    else
+    {
+      CreateCustomChar(CACTUS_FRONT_NUM, UserApp1_u8cactusBitmaps[5 - u8subframeCount]);
+      CreateCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[10 - u8subframeCount]);
+    }
+
+    u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
+  }
 } /* end UserApp1SM_Idle() */
      
 
