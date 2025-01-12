@@ -163,10 +163,19 @@ static void UserApp1SM_Idle(void)
     static u8 u8subframeCount = U8_FRAME_SUBFRAMES;
     if (u8subframeCount-- == 0)
     {
-      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
+      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; )
       {
         LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index], ' ');
-        u8cactusPositions[u8Index]--;
+        if (u8cactusPositions[u8Index] == 0)
+        {
+          for (u8 u8ItemToReplace = u8Index; u8cactusPositions[u8ItemToReplace] != 0xFF; u8ItemToReplace++)
+            u8cactusPositions[u8ItemToReplace] = u8cactusPositions[u8ItemToReplace + 1];
+        }
+        else
+        {
+          u8cactusPositions[u8Index]--;
+          u8Index++;
+        }
       }
       LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[5]);
       for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
@@ -176,7 +185,8 @@ static void UserApp1SM_Idle(void)
       LcdModifyCustomChar(CACTUS_FRONT_NUM, UserApp1_u8cactusBitmaps[0]);
       for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
       {
-        LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index] - 1, CACTUS_FRONT_NUM);
+        if (u8cactusPositions[u8Index])
+          LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index] - 1, CACTUS_FRONT_NUM);
       }
 
       u8subframeCount = U8_FRAME_SUBFRAMES;
