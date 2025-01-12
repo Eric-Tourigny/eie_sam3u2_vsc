@@ -196,7 +196,7 @@ void LcdPutChar(u8 u8Address_, u8 u8Char_)
 
 
 /*!---------------------------------------------------------------------------------------------------------------------
-@fn void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_)
+@fn void LcdModifyCustomChar(u8 u8charNum_, u8* u8bitMap_)
 
 @brief Defines a custom character in LCD CGRAM
 
@@ -204,9 +204,10 @@ Custom characters consist of eight bytes, whose five least significant bits
 determine whether that pixel will be opaque (1) or transparent (0).
 
 Only eight custom characters may be defined on the LCD's CGRAM,
-which we number 1 to 8. Custom characters may be printed using LCD message
-by passing 0x01 to 0x08 as the character. Custom character 8 is equivalent to 
-0 for the LCD, but this conflicts with null terminators in LCD Message.
+which we number 1 to 8, this overides whatever bit pattern used to be there
+causing all displayed custom characters of that number to immediatly change to the new pattern.
+Custom characters may be printed using LCD message by passing 0x01 to 0x08 as the character. 
+Custom character 8 is equivalent to 0 for the LCD, but this conflicts with null terminators in LCD Message.
 
 Requires:
 - LCD is intialized
@@ -219,7 +220,7 @@ Promises:
 - Message to set the CGRAM address in the LCD is queued, then
   custom character data is queued
 */
-void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_)
+void LcdModifyCustomChar(u8 u8charNum_, u8* u8bitMap_)
 {
   u8 u8Index; 
   static u8 au8LCDCustomCharacter[U8_LCD_MESSAGE_OVERHEAD_SIZE + U8_LCD_CUSTOM_CHAR_SIZE] = {LCD_CONTROL_DATA};
@@ -235,7 +236,7 @@ void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_)
   }
   
   /* Queue the message */
-  TwiWriteData(U8_LCD_ADDRESS, U8_LCD_CUSTOM_CHAR_SIZE, au8LCDCustomCharacter, TWI_STOP);
+  TwiWriteData(U8_LCD_ADDRESS, U8_LCD_CUSTOM_CHAR_SIZE + 1, au8LCDCustomCharacter, TWI_STOP);
 
 } /* end CreateCustomChar() */
 
