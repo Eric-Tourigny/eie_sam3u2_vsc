@@ -62,6 +62,7 @@ Variable names shall start with "UserApp1_<type>" and be declared as static.
 static fnCode_type UserApp1_pfStateMachine;               /*!< @brief The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout counter used across states */
 static u8 UserApp1_u8cactusBitmaps[11][8] = {{}, {}, {}, {}, {}, CACTUS_PATTERN, {}, {}, {}, {}, {}};
+static u8 UserAPP1_u8dino_pattern[8] = DINO_PATTERN;
 
 
 /**********************************************************************************************************************
@@ -96,6 +97,9 @@ void UserApp1Initialize(void)
 
   LcdCommand(LCD_CLEAR_CMD);
   LcdCommand(LCD_FUNCTION_CMD);     //required for custom characters to function
+
+  LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
+  LcdPutChar(LINE2_START_ADDR, DINO_BOTTOM_NUM);
 
   for (u8 u8BitmapN = 4; u8BitmapN != 0xFF; u8BitmapN--)
     for (u8 u8InnerPos = 0; u8InnerPos < 8; u8InnerPos++)
@@ -186,6 +190,8 @@ static void UserApp1SM_Idle(void)
       LcdModifyCustomChar(CACTUS_FRONT_NUM, UserApp1_u8cactusBitmaps[4 - u8subframeCount]);
       LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[10 - u8subframeCount]);
     }
+
+    LcdModifyCustomChar(DINO_BOTTOM_NUM, UserAPP1_u8dino_pattern);
 
     u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
   }

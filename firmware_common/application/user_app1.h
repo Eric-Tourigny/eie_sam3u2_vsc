@@ -64,6 +64,7 @@ Constants / Definitions
 #define   CACTUS_BACK_NUM       (u8)4   /*Custom character number for the back of a cactus*/
 
 #define   CACTUS_PATTERN        {0x04, 0x05, 0x15, 0x15, 0x17, 0x1C, 0x04, 0x04}    /*Custom character pattern for the cactus*/
+#define   DINO_PATTERN          {0x00, 0x03, 0x05, 0x17, 0x1E, 0x1F, 0x0E, 0x0A}    /*Custom character patterm for the dino*/
 
 #endif /* __USER_APP1_H */
 
