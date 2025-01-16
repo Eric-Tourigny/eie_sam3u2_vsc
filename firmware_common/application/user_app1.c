@@ -154,40 +154,30 @@ State Machine Function Definitions
 /* What does this state do? */
 static void UserApp1SM_Idle(void)
 {
-  static u8 u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
+  static u8 u8millisecondCount = 0;
+  static u32 u32cactusPositions = 0x28801100;
+  static u8 u8subframeCount = 0;
+
   if(u8millisecondCount-- == 0)
   {
-    static u8 u8cactusPositions[22] = {16, 19, 0xFF};
-
-
-    static u8 u8subframeCount = U8_FRAME_SUBFRAMES;
     if (u8subframeCount-- == 0)
     {
-      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; )
-      {
-        LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index], ' ');
-        if (u8cactusPositions[u8Index] == 0)
-        {
-          for (u8 u8ItemToReplace = u8Index; u8cactusPositions[u8ItemToReplace] != 0xFF; u8ItemToReplace++)
-            u8cactusPositions[u8ItemToReplace] = u8cactusPositions[u8ItemToReplace + 1];
-        }
-        else
-        {
-          u8cactusPositions[u8Index]--;
-          u8Index++;
-        }
-      }
+      for (u8 u8Index = 1; u8Index < 20; u8Index++)
+        if (u32cactusPositions & (0x80000000 >> u8Index))
+          LcdPutChar(LINE2_START_ADDR | u8Index, ' ');
+
+      u32cactusPositions = u32cactusPositions << 1;
       LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[5]);
-      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
-      {
-        LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index], CACTUS_BACK_NUM);
-      }
+      
+      for (u8 u8Index = 1; u8Index < 20; u8Index++)
+        if (u32cactusPositions & (0x80000000 >> u8Index))
+          LcdPutChar(LINE2_START_ADDR | u8Index, CACTUS_BACK_NUM);
+
       LcdModifyCustomChar(CACTUS_FRONT_NUM, UserApp1_u8cactusBitmaps[0]);
-      for (u8 u8Index = 0; u8cactusPositions[u8Index] != 0xFF; u8Index++)
-      {
-        if (u8cactusPositions[u8Index])
-          LcdPutChar(LINE2_START_ADDR | u8cactusPositions[u8Index] - 1, CACTUS_FRONT_NUM);
-      }
+
+      for (u8 u8Index = 2; u8Index < 20; u8Index++)
+        if (u32cactusPositions & (0x80000000 >> u8Index))
+          LcdPutChar(LINE2_START_ADDR | u8Index - 1, CACTUS_FRONT_NUM);
 
       u8subframeCount = U8_FRAME_SUBFRAMES;
     }
