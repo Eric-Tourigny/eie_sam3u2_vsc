@@ -161,24 +161,32 @@ static void UserApp1SM_Idle(void)
   static u8 u8millisecondCount = 0;
   static u32 u32cactusPositions = 0x28801100;
   static u8 u8subframeCount = 0;
+  static s16 s16DinoHeight = 0x0500;
+  static s16 s16DinoVelocity = 0;
 
   if(u8millisecondCount-- == 0)
   {
     if (u8subframeCount-- == 0)
     {
+      /* Removes the backs of the cactuses, which are now empty characters */
       for (u8 u8Index = 1; u8Index < 20; u8Index++)
         if (u32cactusPositions & (0x80000000 >> u8Index))
           LcdPutChar(LINE2_START_ADDR | u8Index, ' ');
 
+      /* Shifts tracked cactus locations one to the left */
       u32cactusPositions = u32cactusPositions << 1;
+      /* Changes the cactus back to a full cactus character */
       LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[5]);
       
+      /* Replaces old cactus fronts with cactus backs */
       for (u8 u8Index = 1; u8Index < 20; u8Index++)
         if (u32cactusPositions & (0x80000000 >> u8Index))
           LcdPutChar(LINE2_START_ADDR | u8Index, CACTUS_BACK_NUM);
 
-      LcdModifyCustomChar(CACTUS_FRONT_NUM, UserApp1_u8cactusBitmaps[0]);
+      /* Changes the cactus front to an empty character*/
+      LcdModifyCustomChar(CACTUS_FRONT_NUM, ' ');
 
+      /* Places cactus fronts in front of tracked locations */
       for (u8 u8Index = 2; u8Index < 20; u8Index++)
         if (u32cactusPositions & (0x80000000 >> u8Index))
           LcdPutChar(LINE2_START_ADDR | u8Index - 1, CACTUS_FRONT_NUM);
@@ -191,7 +199,18 @@ static void UserApp1SM_Idle(void)
       LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[10 - u8subframeCount]);
     }
 
-    LcdModifyCustomChar(DINO_BOTTOM_NUM, UserAPP1_u8dino_pattern);
+    u8 dino_bottom[8] = {};
+    u8 pixel_height = ((u16)s16DinoHeight) >> 8;
+
+    for (u8 u8Index = 0; u8Index < 8; u8Index++)
+      dino_bottom[u8Index] = (s8)(7 - pixel_height - u8Index) >= 0 ? UserAPP1_u8dino_pattern[u8Index + pixel_height] : 0;
+    
+    LcdModifyCustomChar(DINO_BOTTOM_NUM, dino_bottom);
+
+    for (u8 u8Index = 0; u8Index < 8; u8Index++)
+      dino_bottom[u8Index] = ((s8)(16 - pixel_height - u8Index) >= 0 && (pixel_height + u8Index) >= 9) ? UserAPP1_u8dino_pattern[pixel_height + u8Index - 9] : 0;
+
+    LcdModifyCustomChar(DINO_TOP_NUM, dino_bottom);
 
     u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
   }
