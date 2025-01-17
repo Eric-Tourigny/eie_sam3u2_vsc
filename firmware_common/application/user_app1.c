@@ -161,8 +161,10 @@ static void UserApp1SM_Idle(void)
   static u8 u8millisecondCount = 0;
   static u32 u32cactusPositions = 0x28801100;
   static u8 u8subframeCount = 0;
-  static s16 s16DinoHeight = 0x0500;
+  static s16 s16DinoHeight = 0x0000;
   static s16 s16DinoVelocity = 0;
+  static u8* u8DinoBottomMask = UserApp1_u8cactusBitmaps[0];
+  static u8* u8DinoTopMask = UserApp1_u8cactusBitmaps[0];
 
   if(u8millisecondCount-- == 0)
   {
@@ -199,21 +201,39 @@ static void UserApp1SM_Idle(void)
       LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[10 - u8subframeCount]);
     }
 
-    u8 dino_bottom[8] = {};
+    s16DinoHeight += s16DinoVelocity;
+    s16DinoVelocity -= 50;
+
+
+    
+
+    if (s16DinoHeight <= 0)
+    {
+      s16DinoHeight = 0;
+      s16DinoVelocity = 0;
+      if (WasButtonPressed(BUTTON0))
+      {
+        ButtonAcknowledge(BUTTON0);
+        s16DinoVelocity = 500;
+      }
+    }
+
+    u8 dino_pattern[8] = {};
     u8 pixel_height = ((u16)s16DinoHeight) >> 8;
 
+
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
-      dino_bottom[u8Index] = (s8)(7 - pixel_height - u8Index) >= 0 ? UserAPP1_u8dino_pattern[u8Index + pixel_height] : 0;
+      dino_pattern[u8Index] = (s8)(7 - pixel_height - u8Index) >= 0 ? UserAPP1_u8dino_pattern[u8Index + pixel_height] : 0;
     
-    LcdModifyCustomChar(DINO_BOTTOM_NUM, dino_bottom);
+    LcdModifyCustomChar(DINO_BOTTOM_NUM, dino_pattern);
 
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
-      dino_bottom[u8Index] = ((s8)(16 - pixel_height - u8Index) >= 0 && (pixel_height + u8Index) >= 9) ? UserAPP1_u8dino_pattern[pixel_height + u8Index - 9] : 0;
+      dino_pattern[u8Index] = ((s8)(16 - pixel_height - u8Index) >= 0 && (pixel_height + u8Index) >= 9) ? UserAPP1_u8dino_pattern[pixel_height + u8Index - 9] : 0;
 
-    LcdModifyCustomChar(DINO_TOP_NUM, dino_bottom);
+    LcdModifyCustomChar(DINO_TOP_NUM, dino_pattern);
 
     u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
-  }
+  } /* end of subframe */
 } /* end UserApp1SM_Idle() */
      
 
