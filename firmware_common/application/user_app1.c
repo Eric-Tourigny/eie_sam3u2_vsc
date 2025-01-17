@@ -163,8 +163,8 @@ static void UserApp1SM_Idle(void)
   static u8 u8subframeCount = 0;
   static s16 s16DinoHeight = 0x0000;
   static s16 s16DinoVelocity = 0;
-  static u8* u8DinoBottomMask = UserApp1_u8cactusBitmaps[0];
-  static u8* u8DinoTopMask = UserApp1_u8cactusBitmaps[0];
+  static u8 (*u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps;
+  static u8 (*u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps;
 
   if(u8millisecondCount-- == 0)
   {
@@ -193,6 +193,9 @@ static void UserApp1SM_Idle(void)
         if (u32cactusPositions & (0x80000000 >> u8Index))
           LcdPutChar(LINE2_START_ADDR | u8Index - 1, CACTUS_FRONT_NUM);
 
+      if (u32cactusPositions & 0x40000000)
+        u8DinoBottomMask = UserApp1_u8cactusBitmaps;
+
       u8subframeCount = U8_FRAME_SUBFRAMES;
     }
     else
@@ -204,8 +207,6 @@ static void UserApp1SM_Idle(void)
     s16DinoHeight += s16DinoVelocity;
     s16DinoVelocity -= 50;
 
-
-    
 
     if (s16DinoHeight <= 0)
     {
@@ -223,14 +224,23 @@ static void UserApp1SM_Idle(void)
 
 
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
-      dino_pattern[u8Index] = (s8)(7 - pixel_height - u8Index) >= 0 ? UserAPP1_u8dino_pattern[u8Index + pixel_height] : 0;
-    
+    {
+      if ((s8)(7 - pixel_height - u8Index) >= 0)
+        dino_pattern[u8Index] = UserAPP1_u8dino_pattern[u8Index + pixel_height] | (*u8DinoBottomMask)[u8Index];
+      else
+        dino_pattern[u8Index] = (*u8DinoBottomMask)[u8Index];
+    }
+
     LcdModifyCustomChar(DINO_BOTTOM_NUM, dino_pattern);
 
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
       dino_pattern[u8Index] = ((s8)(16 - pixel_height - u8Index) >= 0 && (pixel_height + u8Index) >= 9) ? UserAPP1_u8dino_pattern[pixel_height + u8Index - 9] : 0;
 
     LcdModifyCustomChar(DINO_TOP_NUM, dino_pattern);
+
+
+    if (u8DinoBottomMask != UserApp1_u8cactusBitmaps + 10)
+      u8DinoBottomMask++;
 
     u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
   } /* end of subframe */
