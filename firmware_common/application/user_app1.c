@@ -225,8 +225,13 @@ static void UserApp1SM_RunGame(void)
     /* Determines custom char pattern for bottom leftmost tile */
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
     {
-      if ((s8)(7 - pixel_height - u8Index) >= 0)
+      if ((s8)(7 - pixel_height - u8Index) >= 0) {
         dino_pattern[u8Index] = UserAPP1_u8dino_pattern[u8Index + pixel_height] | (*u8DinoBottomMask)[u8Index];
+        if (UserAPP1_u8dino_pattern[u8Index + pixel_height] & (*u8DinoBottomMask)[u8Index]) {
+          UserApp1_pfStateMachine = UserApp1SM_MenuSetup;
+          u32cactusPositions = 0x08801100;
+        }
+      }
       else
         dino_pattern[u8Index] = (*u8DinoBottomMask)[u8Index];
     }
@@ -254,6 +259,8 @@ static void UserApp1SM_RunGame(void)
      
 
 static void UserApp1SM_MenuSetup() {
+  LcdClearChars(LINE1_START_ADDR, 20);
+  LcdClearChars(LINE2_START_ADDR, 20);
   LcdMessage(LINE1_START_ADDR, "Press BUTTON 0 to");
   LcdMessage(LINE2_START_ADDR, "begin");
   UserApp1_pfStateMachine = UserApp1SM_CheckMenu;
