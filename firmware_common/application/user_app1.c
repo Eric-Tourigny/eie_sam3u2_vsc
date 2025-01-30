@@ -98,9 +98,6 @@ void UserApp1Initialize(void)
   LcdCommand(LCD_CLEAR_CMD);
   LcdCommand(LCD_FUNCTION_CMD);     //required for custom characters to function
 
-  LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
-  LcdPutChar(LINE2_START_ADDR, DINO_BOTTOM_NUM);
-
   for (u8 u8BitmapN = 4; u8BitmapN != 0xFF; u8BitmapN--)
     for (u8 u8InnerPos = 0; u8InnerPos < 8; u8InnerPos++)
       UserApp1_u8cactusBitmaps[u8BitmapN][u8InnerPos] = UserApp1_u8cactusBitmaps[u8BitmapN + 1][u8InnerPos] >> 1;
@@ -113,7 +110,7 @@ void UserApp1Initialize(void)
   /* If good initialization, set state to Idle */
   if( 1 )
   {
-    UserApp1_pfStateMachine = UserApp1SM_Idle;
+    UserApp1_pfStateMachine = UserApp1SM_MenuSetup;
   }
   else
   {
@@ -156,7 +153,7 @@ State Machine Function Definitions
 **********************************************************************************************************************/
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* What does this state do? */
-static void UserApp1SM_Idle(void)
+static void UserApp1SM_RunGame(void)
 {
   static u8 u8millisecondCount = 0;
   static u32 u32cactusPositions = 0x08801100;
@@ -255,6 +252,26 @@ static void UserApp1SM_Idle(void)
   } /* end of subframe */
 } /* end UserApp1SM_Idle() */
      
+
+static void UserApp1SM_MenuSetup() {
+  LcdMessage(LINE1_START_ADDR, "Press BUTTON 0 to");
+  LcdMessage(LINE2_START_ADDR, "begin");
+  UserApp1_pfStateMachine = UserApp1SM_CheckMenu;
+}
+
+static void UserApp1SM_CheckMenu() {
+  if(WasButtonPressed(BUTTON0)) {
+    ButtonAcknowledge(BUTTON0);
+    LcdClearChars(LINE1_START_ADDR, 20);
+    LcdClearChars(LINE2_START_ADDR, 20);
+    LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
+    LcdPutChar(LINE2_START_ADDR, DINO_BOTTOM_NUM);
+
+    UserApp1_pfStateMachine = UserApp1SM_RunGame;
+  }
+}
+
+
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
