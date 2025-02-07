@@ -156,17 +156,23 @@ State Machine Function Definitions
 static void UserApp1SM_RunGame(void)
 {
   static u8 u8millisecondCount = 0;
-  static u32 u32cactusPositions = 0x08801100;
+  static u32 u32cactusPositions = 0x08801FFF;
   static u8 u8subframeCount = 0;
   static s16 s16DinoHeight = 0x0000;
   static s16 s16DinoVelocity = 0;
   static u8 (*u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 10;
   static u8 (*u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 10;
+  static u8 u8framesToNextCactus = 5;
+
 
   if(u8millisecondCount-- == 0)
   {
+    //DebugPrintf("1");
+
     if (u8subframeCount-- == 0)
     {
+      //DebugPrintf("2");
+
       /* Removes the backs of the cactuses, which are now empty characters */
       for (u8 u8Index = 1; u8Index < 20; u8Index++)
         if (u32cactusPositions & (0x80000000 >> u8Index))
@@ -191,7 +197,21 @@ static void UserApp1SM_RunGame(void)
           LcdPutChar(LINE2_START_ADDR | u8Index - 1, CACTUS_FRONT_NUM);
 
       if (u32cactusPositions & 0x40000000)
+      {
         u8DinoBottomMask = UserApp1_u8cactusBitmaps;
+      }
+      
+      /*
+      if (--u8framesToNextCactus == 0)
+      {
+        u32cactusPositions |= 0x800;
+        u8framesToNextCactus = 4;
+      }
+      */
+      
+      
+
+
 
       u8subframeCount = U8_FRAME_SUBFRAMES;
     }
@@ -252,6 +272,11 @@ static void UserApp1SM_RunGame(void)
     /* Updates cactus in the bottom leftmost tile */
     if (u8DinoBottomMask != UserApp1_u8cactusBitmaps + 10)
       u8DinoBottomMask++;
+
+    
+
+
+
 
     u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
   } /* end of subframe */
