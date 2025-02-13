@@ -194,6 +194,23 @@ void LcdPutChar(u8 u8Address_, u8 u8Char_)
 
 } /* end LcdMessage() */
 
+u8 commands[50];
+u8 numberCommands;
+
+void LcdAddCharBatch(u8 u8Address_, u8 u8Char_)
+{
+  commands[numberCommands] = 0x80;
+  commands[numberCommands + 1] = u8Address_;
+  commands[numberCommands + 2] = 0xc0;
+  commands[numberCommands + 3] = u8Char_;
+  numberCommands += 4;
+}
+
+void LcdLaunchBatch()
+{
+  TwiWriteData(U8_LCD_ADDRESS, numberCommands, commands, TWI_STOP);
+}
+
 
 /*!---------------------------------------------------------------------------------------------------------------------
 @fn void LcdModifyCustomChar(u8 u8charNum_, u8* u8bitMap_)
