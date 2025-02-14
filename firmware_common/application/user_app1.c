@@ -156,7 +156,7 @@ State Machine Function Definitions
 static void UserApp1SM_RunGame(void)
 {
   static u8 u8millisecondCount = 0;
-  static u32 u32cactusPositions = 0x08801FFF;
+  static u8 u8CactusPositions[21] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', CACTUS_FRONT_NUM, CACTUS_BACK_NUM, ' ', ' ', ' ', ' ' , ' ', ' ', ' ', '\0'};
   static u8 u8subframeCount = 0;
   static s16 s16DinoHeight = 0x0000;
   static s16 s16DinoVelocity = 0;
@@ -167,51 +167,29 @@ static void UserApp1SM_RunGame(void)
 
   if(u8millisecondCount-- == 0)
   {
-    //DebugPrintf("1");
-
     if (u8subframeCount-- == 0)
     {
-      //DebugPrintf("2");
+      for(u8 u8Index = 0; u8Index < 19; u8Index++) {
+        u8CactusPositions[u8Index] = u8CactusPositions[u8Index + 1];
+      }
 
-      /* Removes the backs of the cactuses, which are now empty characters */
-      for (u8 u8Index = 1; u8Index < 20; u8Index++)
-        if (u32cactusPositions & (0x80000000 >> u8Index))
-          LcdPutChar(LINE2_START_ADDR | u8Index, ' ');
+      if (--u8framesToNextCactus == 1) {
+        u8CactusPositions[19] = CACTUS_FRONT_NUM;
+      } else if (u8framesToNextCactus == 0)
+      {
+        u8CactusPositions[19] = CACTUS_BACK_NUM;
+        u8framesToNextCactus = 2;
+      } else {
+        u8CactusPositions[19] = ' ';
+      }
 
-      /* Shifts tracked cactus locations one to the left */
-      u32cactusPositions = u32cactusPositions << 1;
+      LcdMessage(LINE2_START_ADDR + 1, u8CactusPositions + 1);
+
       /* Changes the cactus back to a full cactus character */
       LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[5]);
-      
-      /* Replaces old cactus fronts with cactus backs */
-      for (u8 u8Index = 1; u8Index < 20; u8Index++)
-        if (u32cactusPositions & (0x80000000 >> u8Index))
-          LcdPutChar(LINE2_START_ADDR | u8Index, CACTUS_BACK_NUM);
 
       /* Changes the cactus front to an empty character*/
       LcdModifyCustomChar(CACTUS_FRONT_NUM, ' ');
-
-      /* Places cactus fronts in front of tracked locations */
-      for (u8 u8Index = 2; u8Index < 20; u8Index++)
-        if (u32cactusPositions & (0x80000000 >> u8Index))
-          LcdPutChar(LINE2_START_ADDR | u8Index - 1, CACTUS_FRONT_NUM);
-
-      if (u32cactusPositions & 0x40000000)
-      {
-        u8DinoBottomMask = UserApp1_u8cactusBitmaps;
-      }
-      
-      /*
-      if (--u8framesToNextCactus == 0)
-      {
-        u32cactusPositions |= 0x800;
-        u8framesToNextCactus = 4;
-      }
-      */
-      
-      
-
-
 
       u8subframeCount = U8_FRAME_SUBFRAMES;
     }
@@ -249,7 +227,6 @@ static void UserApp1SM_RunGame(void)
         dino_pattern[u8Index] = UserAPP1_u8dino_pattern[u8Index + pixel_height] | (*u8DinoBottomMask)[u8Index];
         if (UserAPP1_u8dino_pattern[u8Index + pixel_height] & (*u8DinoBottomMask)[u8Index]) {
           UserApp1_pfStateMachine = UserApp1SM_MenuSetup;
-          u32cactusPositions = 0x08801100;
         }
       }
       else
