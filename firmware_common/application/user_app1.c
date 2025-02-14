@@ -195,8 +195,12 @@ static void UserApp1SM_RunGame(void)
     }
     else
     {
-      LcdModifyCustomChar(CACTUS_FRONT_NUM, UserApp1_u8cactusBitmaps[4 - u8subframeCount]);
-      LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[10 - u8subframeCount]);
+      u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 4 - u8subframeCount;
+      LcdModifyCustomChar(CACTUS_FRONT_NUM, *u8cactusFrontBitPattern);
+      if (u8CactusPositions[0] == CACTUS_FRONT_NUM) u8DinoBottomMask = u8cactusFrontBitPattern;
+      u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 10 - u8subframeCount;
+      LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
+      if (u8CactusPositions[0] == CACTUS_BACK_NUM) u8DinoBottomMask = u8cactusBackBitPattern;
     }
 
     /* Updates dino height and sees if its reached the ground*/
@@ -219,6 +223,7 @@ static void UserApp1SM_RunGame(void)
 
     /* Dino height in pixels is dino height divided by 256 */
     u8 pixel_height = ((u16)s16DinoHeight) >> 8;
+    
 
     /* Determines custom char pattern for bottom leftmost tile */
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
@@ -246,11 +251,6 @@ static void UserApp1SM_RunGame(void)
 
     LcdModifyCustomChar(DINO_TOP_NUM, dino_pattern);
 
-    /* Updates cactus in the bottom leftmost tile */
-    if (u8DinoBottomMask != UserApp1_u8cactusBitmaps + 10)
-      u8DinoBottomMask++;
-
-    
 
 
 
