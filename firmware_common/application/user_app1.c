@@ -61,7 +61,7 @@ Variable names shall start with "UserApp1_<type>" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type UserApp1_pfStateMachine;               /*!< @brief The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout counter used across states */
-static u8 UserApp1_u8cactusBitmaps[11][8] = {{}, {}, {}, {}, {}, CACTUS_PATTERN, {}, {}, {}, {}, {}};
+static u8 UserApp1_u8cactusBitmaps[12][8] = {{}, {}, {}, {}, {}, {}, CACTUS_PATTERN, {}, {}, {}, {}, {}};
 static u8 UserAPP1_u8dino_pattern[8] = DINO_PATTERN;
 
 
@@ -98,11 +98,11 @@ void UserApp1Initialize(void)
   LcdCommand(LCD_CLEAR_CMD);
   LcdCommand(LCD_FUNCTION_CMD);     //required for custom characters to function
 
-  for (u8 u8BitmapN = 4; u8BitmapN != 0xFF; u8BitmapN--)
+  for (u8 u8BitmapN = 5; u8BitmapN != 0; u8BitmapN--)
     for (u8 u8InnerPos = 0; u8InnerPos < 8; u8InnerPos++)
       UserApp1_u8cactusBitmaps[u8BitmapN][u8InnerPos] = UserApp1_u8cactusBitmaps[u8BitmapN + 1][u8InnerPos] >> 1;
 
-  for (u8 u8BitmapN = 6; u8BitmapN <= 10; u8BitmapN++)
+  for (u8 u8BitmapN = 7; u8BitmapN <= 11; u8BitmapN++)
     for (u8 u8InnerPos = 0; u8InnerPos < 8; u8InnerPos++)
       UserApp1_u8cactusBitmaps[u8BitmapN][u8InnerPos] = (UserApp1_u8cactusBitmaps[u8BitmapN - 1][u8InnerPos] << 1) & 0x1F;
 
@@ -160,8 +160,8 @@ static void UserApp1SM_RunGame(void)
   static u8 u8subframeCount = 0;
   static s16 s16DinoHeight = 0x0000;
   static s16 s16DinoVelocity = 0;
-  static u8 (*u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 10;
-  static u8 (*u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 10;
+  static u8 (*u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 11;
+  static u8 (*u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 11;
   static u8 u8framesToNextCactus = 5;
 
 
@@ -185,23 +185,16 @@ static void UserApp1SM_RunGame(void)
 
       LcdMessage(LINE2_START_ADDR + 1, u8CactusPositions + 1);
 
-      /* Changes the cactus back to a full cactus character */
-      LcdModifyCustomChar(CACTUS_BACK_NUM, UserApp1_u8cactusBitmaps[5]);
-
-      /* Changes the cactus front to an empty character*/
-      LcdModifyCustomChar(CACTUS_FRONT_NUM, ' ');
-
       u8subframeCount = U8_FRAME_SUBFRAMES;
     }
-    else
-    {
-      u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 4 - u8subframeCount;
-      LcdModifyCustomChar(CACTUS_FRONT_NUM, *u8cactusFrontBitPattern);
-      if (u8CactusPositions[0] == CACTUS_FRONT_NUM) u8DinoBottomMask = u8cactusFrontBitPattern;
-      u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 10 - u8subframeCount;
-      LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
-      if (u8CactusPositions[0] == CACTUS_BACK_NUM) u8DinoBottomMask = u8cactusBackBitPattern;
-    }
+
+    u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 5 - u8subframeCount;
+    LcdModifyCustomChar(CACTUS_FRONT_NUM, *u8cactusFrontBitPattern);
+    if (u8CactusPositions[0] == CACTUS_FRONT_NUM) u8DinoBottomMask = u8cactusFrontBitPattern;
+    u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 11 - u8subframeCount;
+    LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
+    if (u8CactusPositions[0] == CACTUS_BACK_NUM) u8DinoBottomMask = u8cactusBackBitPattern;
+
 
     /* Updates dino height and sees if its reached the ground*/
     s16DinoHeight += s16DinoVelocity;
