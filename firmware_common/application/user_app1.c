@@ -63,7 +63,14 @@ static fnCode_type UserApp1_pfStateMachine;               /*!< @brief The state 
 //static u32 UserApp1_u32Timeout;                           /*!< @brief Timeout counter used across states */
 static u8 UserApp1_u8cactusBitmaps[12][8] = {{}, {}, {}, {}, {}, {}, CACTUS_PATTERN, {}, {}, {}, {}, {}};
 static u8 UserAPP1_u8dino_pattern[8] = DINO_PATTERN;
-
+static u8 UserApp1_u8MillisecondCount = 0;
+static u8 u8CactusPositions[21] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', CACTUS_FRONT_NUM, CACTUS_BACK_NUM, ' ', ' ', ' ', ' ' , ' ', ' ', ' ', '\0'};
+static u8 u8SubframeCount = 0;
+static s16 s16DinoHeight = 0x0000;
+static s16 s16DinoVelocity = 0;
+static u8 (*u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 11;
+static u8 (*u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 11;
+static u8 u8FramesToNextCactus = 5;
 
 /**********************************************************************************************************************
 Function Definitions
@@ -76,6 +83,60 @@ Function Definitions
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*! @protectedsection */                                                                                            
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+
+
+enum { 
+  INIT = 0,
+  RUN_GAME,
+  CHECK_MENU
+} typedef State_t;
+
+State_t currentState = INIT;
+
+void enterInit(State_t prevState) {
+
+}
+
+
+void  enterRunGame(State_t prevState) {
+  UserApp1_u8MillisecondCount = 0;
+  for (u8 u8Index = 0; u8Index < 20; u8Index++)
+    u8CactusPositions[u8Index] = ' ';
+  u8CactusPositions[20] = '\0';  
+  u8SubframeCount = 0;
+  s16DinoHeight = 0x0000;
+  s16DinoVelocity = 0;
+  u8DinoBottomMask = UserApp1_u8cactusBitmaps + 11;
+  u8DinoTopMask = UserApp1_u8cactusBitmaps + 11;
+  u8FramesToNextCactus = 5;
+}
+
+
+void  enterCheckMenu(State_t prevState) {
+
+}
+
+static void (*stateTransition[])(State_t) = {
+  enterInit,
+  enterRunGame,
+  enterCheckMenu
+};
+
+static void (*stateFunctionArray[])(void) = {
+  UserApp1Initialize,
+  UserApp1SM_RunGame,
+  UserApp1SM_CheckMenu,
+};
+
+static void gotoState(State_t targetState) {
+  stateTransition[targetState](currentState);
+  currentState = targetState;
+  UserApp1_pfStateMachine = stateFunctionArray[currentState];
+}
+
+
+
 
 /*!--------------------------------------------------------------------------------------------------------------------
 @fn void UserApp1Initialize(void)
@@ -155,43 +216,36 @@ State Machine Function Definitions
 /* What does this state do? */
 static void UserApp1SM_RunGame(void)
 {
-  static u8 u8millisecondCount = 0;
-  static u8 u8CactusPositions[21] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', CACTUS_FRONT_NUM, CACTUS_BACK_NUM, ' ', ' ', ' ', ' ' , ' ', ' ', ' ', '\0'};
-  static u8 u8subframeCount = 0;
-  static s16 s16DinoHeight = 0x0000;
-  static s16 s16DinoVelocity = 0;
-  static u8 (*u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 11;
-  static u8 (*u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 11;
-  static u8 u8framesToNextCactus = 5;
 
 
-  if(u8millisecondCount-- == 0)
+
+  if(UserApp1_u8MillisecondCount-- == 0)
   {
-    if (u8subframeCount-- == 0)
+    if (u8SubframeCount-- == 0)
     {
       for(u8 u8Index = 0; u8Index < 19; u8Index++) {
         u8CactusPositions[u8Index] = u8CactusPositions[u8Index + 1];
       }
 
-      if (--u8framesToNextCactus == 1) {
+      if (--u8FramesToNextCactus == 1) {
         u8CactusPositions[19] = CACTUS_FRONT_NUM;
-      } else if (u8framesToNextCactus == 0)
+      } else if (u8FramesToNextCactus == 0)
       {
         u8CactusPositions[19] = CACTUS_BACK_NUM;
-        u8framesToNextCactus = 2;
+        u8FramesToNextCactus = 2;
       } else {
         u8CactusPositions[19] = ' ';
       }
 
       LcdMessage(LINE2_START_ADDR + 1, u8CactusPositions + 1);
 
-      u8subframeCount = U8_FRAME_SUBFRAMES;
+      u8SubframeCount = U8_FRAME_SUBFRAMES;
     }
 
-    u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 5 - u8subframeCount;
+    u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 5 - u8SubframeCount;
     LcdModifyCustomChar(CACTUS_FRONT_NUM, *u8cactusFrontBitPattern);
     if (u8CactusPositions[0] == CACTUS_FRONT_NUM) u8DinoBottomMask = u8cactusFrontBitPattern;
-    u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 11 - u8subframeCount;
+    u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 11 - u8SubframeCount;
     LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
     if (u8CactusPositions[0] == CACTUS_BACK_NUM) u8DinoBottomMask = u8cactusBackBitPattern;
 
@@ -205,7 +259,7 @@ static void UserApp1SM_RunGame(void)
       s16DinoVelocity = 0;
 
       /* Dino can jump if its on the ground */
-      if (WasButtonPressed(BUTTON0))
+      if (IsButtonPressed(BUTTON0))
       {
         ButtonAcknowledge(BUTTON0);
         s16DinoVelocity = 500;
@@ -244,11 +298,7 @@ static void UserApp1SM_RunGame(void)
 
     LcdModifyCustomChar(DINO_TOP_NUM, dino_pattern);
 
-
-
-
-
-    u8millisecondCount = U8_SUBFRAME_MILLISECONDS;
+    UserApp1_u8MillisecondCount = U8_SUBFRAME_MILLISECONDS;
   } /* end of subframe */
 } /* end UserApp1SM_Idle() */
      
