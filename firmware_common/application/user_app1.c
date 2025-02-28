@@ -93,6 +93,8 @@ enum {
   STATE_RUN_GAME,
   STATE_CHECK_MENU,
   STATE_CRASH_ANIMATION,
+  STATE_WAIT_ANT_READY,
+  STATE_WAIT_ANT_OPEN,
 } typedef State_t;
 
 State_t currentState = STATE_INIT;
@@ -122,16 +124,50 @@ void enterCheckMenu(State_t prevState) {
   LcdClearChars(LINE2_START_ADDR, 20);
   LcdMessage(LINE1_START_ADDR, "Press BUTTON 0 to");
   LcdMessage(LINE2_START_ADDR, "begin");
-  UserApp1_pfStateMachine = UserApp1SM_CheckMenu;
 }
 
 void enterCrashAnimation(State_t prevState) {}
+
+void enterWaitANTReady(State_t prevState) {
+  AntAssignChannelInfoType sChannelInfo;
+
+  if(AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_UNCONFIGURED)
+  {
+    sChannelInfo.AntChannel = U8_ANT_CHANNEL_PERIOD_HI_USERAPP;
+    sChannelInfo.AntChannelType = CHANNEL_TYPE_SLAVE;
+    sChannelInfo.AntChannelPeriodHi = U8_ANT_CHANNEL_PERIOD_HI_USERAPP;
+    sChannelInfo.AntChannelPeriodLo = U8_ANT_CHANNEL_PERIOD_LO_USERAPP;
+    
+    sChannelInfo.AntDeviceIdHi = U8_ANT_DEVICE_HI_USERAPP;
+    sChannelInfo.AntDeviceIdLo = U8_ANT_DEVICE_LO_USERAPP;
+    sChannelInfo.AntDeviceType = U8_ANT_DEVICE_TYPE_USERAPP;
+    sChannelInfo.AntTransmissionType = U8_ANT_TRANSMISSION_TYPE_USERAPP;
+    
+    sChannelInfo.AntFrequency = U8_ANT_FREQUENCY_USERAPP;
+    sChannelInfo.AntTxPower = U8_ANT_TX_POWER_USERAPP;
+    
+    sChannelInfo.AntNetwork = ANT_NETWORK_DEFAULT;
+    for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
+    {
+      sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+    }
+  }
+
+  LedOn(RED);
+}
+
+void enterWaitANTOpen(State_t prevState) {
+  AntOpenChannelNumber(U8_ANT_CHANNEL_USERAPP);
+  LedOff(RED);
+  LedOn(YELLOW);
+}
 
 void (*stateTransition[])(State_t) = {
   enterInit,
   enterRunGame,
   enterCheckMenu,
   enterCrashAnimation,
+  enterWaitANTReady,
 };
 
 void (*stateFunctionArray[])(void) = {
@@ -186,6 +222,9 @@ bool getButtonInput() {
   return buttonPressed;
 }
 
+bool getANTInput() {
+
+}
 
 
 /*!--------------------------------------------------------------------------------------------------------------------
@@ -329,7 +368,7 @@ static void UserApp1SM_RunGame(void)
 } /* end UserApp1SM_Idle() */
      
 
-static void UserApp1SM_CheckMenu() {
+void UserApp1SM_CheckMenu() {
   if (WasButtonPressed(BUTTON0)) {
     ButtonAcknowledge(BUTTON0);
     UserApp1_checkInputFunction = getButtonInput;
@@ -337,11 +376,30 @@ static void UserApp1SM_CheckMenu() {
   }
   if (WasButtonPressed(BUTTON1)) {
     ButtonAcknowledge(BUTTON1);
+    UserApp1_checkInputFunction = getANTInput;
+    gotoState(STATE_WAIT_ANT_READY);
   }
 }
 
-static void UserApp1SM_CrashAnimation() {
+void UserApp1SM_CrashAnimation() {
   gotoState(STATE_CHECK_MENU);
+}
+
+
+void UserApp1SM_WaitANTReady() {
+  if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_CONFIGURED) {
+    gotoState(STATE_WAIT_ANT_OPEN);
+  }
+}
+
+void UserApp1SM_WaitANTOpen() {
+  if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_OPEN)
+  {
+    LedOff(YELLOW);
+    LedOn(GREEN);
+
+    gotoState(STATE_RUN_GAME);
+  }
 }
 
 
