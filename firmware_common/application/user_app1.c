@@ -54,6 +54,11 @@ extern volatile u32 G_u32SystemTime1s;                    /*!< @brief From main.
 extern volatile u32 G_u32SystemFlags;                     /*!< @brief From main.c */
 extern volatile u32 G_u32ApplicationFlags;                /*!< @brief From main.c */
 
+/* ANT Radio */
+extern volatile AntApplicationMessageType G_eAntApiCurrentMessageClass;
+extern volatile u8 G_au8AntApiCurrentMessageBytes[ANT_APPLICATION_MESSAGE_BYTES];
+extern volatile AntExtendedDataType G_sAntApiCurrentMessageExtData;
+
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
@@ -151,6 +156,8 @@ void enterWaitANTReady(State_t prevState) {
     {
       sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     }
+
+    AntAssignChannel(&sChannelInfo);
   }
 
   LedOn(RED);
@@ -168,6 +175,7 @@ void (*stateTransition[])(State_t) = {
   enterCheckMenu,
   enterCrashAnimation,
   enterWaitANTReady,
+  enterWaitANTOpen,
 };
 
 void (*stateFunctionArray[])(void) = {
@@ -175,6 +183,8 @@ void (*stateFunctionArray[])(void) = {
   UserApp1SM_RunGame,
   UserApp1SM_CheckMenu,
   UserApp1SM_CrashAnimation,
+  UserApp1SM_WaitANTReady,
+  UserApp1SM_WaitANTOpen,
 };
 
 void gotoState(State_t targetState) {
@@ -223,7 +233,87 @@ bool getButtonInput() {
 }
 
 bool getANTInput() {
+  static u8 u8LastState = 0xff;
+  static u8 au8TickMessage[] = "EVENT x\n\r";
+  static u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
+  static u8 au8LastAntData[ ANT_APPLICATION_MESSAGE_BYTES ] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+  static u8 au8TestMessage[] = {0, 0, 0, 0, 0xa5, 0, 0, 0};
+  bool bGotNewData;
 
+  if (AntReadAppMessageBuffer())
+  {
+    //DebugPrintf("Message");
+    if (G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      LedOff(PURPLE);
+      u8LastState = 0xff;
+      static bool bGotNewData = FALSE;
+
+      for(u8 i = 0; i < ANT_APPLICATION_MESSAGE_BYTES; i++) {
+        if (G_au8AntApiCurrentMessageBytes[i] != au8LastAntData[i]){
+          bGotNewData = TRUE;
+          au8LastAntData[i] = G_au8AntApiCurrentMessageBytes[i];
+          au8DataContent[2 * i] = HexToASCIICharLower(G_au8AntApiCurrentMessageBytes[i] >> 4);
+          au8DataContent[2*i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] & 0xf);
+        }
+      }
+
+      if (bGotNewData) {
+        bGotNewData = FALSE;
+        if (au8LastAntData[0] == 0xA5) 
+        {
+          for (int i = 1; i < 8; i++) 
+          {
+            if (au8LastAntData[i] == 1)
+            {
+              LedOn(i);
+            }
+            else
+            {
+              LedOff(i);
+            }
+          }
+        }
+        DebugPrintf(au8DataContent);
+        LcdClearChars(LINE1_START_ADDR, 20);
+        LcdMessage(LINE1_START_ADDR, au8DataContent);
+      }
+    }
+    else if (G_eAntApiCurrentMessageClass == ANT_TICK)
+    {
+      if (u8LastState != G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX])
+      {
+        u8LastState = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
+        au8TickMessage[6] = HexToASCIICharLower(u8LastState);
+        DebugPrintf(au8TickMessage);
+
+        switch (u8LastState)
+        {
+          case EVENT_RX_FAIL:
+          {
+            LedOn(PURPLE);
+            break;
+          }
+          case EVENT_RX_FAIL_GO_TO_SEARCH:
+          {
+            LedOff(BLUE);
+            LedOn(GREEN);
+            break;
+          }
+          case EVENT_RX_SEARCH_TIMEOUT:
+          {
+            DebugPrintf("Search timeout\r\n");
+            break;
+          }
+          default:
+          {
+            DebugPrintf("Unexpected Event\r\n");
+            break;
+          }
+        }
+      }
+    }
+  }
 }
 
 
@@ -305,6 +395,8 @@ State Machine Function Definitions
 /* What does this state do? */
 static void UserApp1SM_RunGame(void)
 {
+  bool bool_canJump = UserApp1_checkInputFunction();
+
   if(UserApp1_u8MillisecondCount-- == 0)
   {
     if (UserApp1_u8SubframeCount-- == 0)
@@ -325,7 +417,7 @@ static void UserApp1SM_RunGame(void)
       UserApp1_s16DinoVelocity = 0;
 
       /* Dino can jump if its on the ground */
-      if (UserApp1_checkInputFunction())
+      if (bool_canJump)
       {
         UserApp1_s16DinoVelocity = 500;
       }

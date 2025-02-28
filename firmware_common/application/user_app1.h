@@ -51,6 +51,8 @@ static void UserApp1SM_RunGame(void);
 static void UserApp1SM_CheckMenu(void);
 static void UserApp1SM_Error(void);         
 static void UserApp1SM_CrashAnimation(void);
+static void UserApp1SM_WaitANTReady(void);
+static void UserApp1SM_WaitANTOpen(void);
 
 
 
@@ -67,6 +69,19 @@ Constants / Definitions
 
 #define   CACTUS_PATTERN        {0x04, 0x05, 0x15, 0x15, 0x17, 0x1C, 0x04, 0x04}    /*Custom character pattern for the cactus*/
 #define   DINO_PATTERN          {0x00, 0x03, 0x05, 0x17, 0x1E, 0x1F, 0x0E, 0x0A}    /*Custom character patterm for the dino*/
+
+/* ANT Constants*/
+
+#define U8_ANT_CHANNEL_USERAPP (u8)ANT_CHANNEL_0 /* Channel 0 – 7 */
+#define U8_ANT_DEVICE_LO_USERAPP (u8)0x22 /* Low byte of two-byte Device # */
+#define U8_ANT_DEVICE_HI_USERAPP (u8)0x16 /* High byte of two-byte Device # */
+#define U8_ANT_DEVICE_TYPE_USERAPP (u8)1 /* 1 – 255 */
+#define U8_ANT_TRANSMISSION_TYPE_USERAPP (u8)1 /* 1-127 (MSB is pairing bit) */
+#define U8_ANT_CHANNEL_PERIOD_LO_USERAPP (u8)0x00 /* Low byte of two-byte channel period */
+#define U8_ANT_CHANNEL_PERIOD_HI_USERAPP (u8)0x20 /* High byte of two-byte channel period */
+#define U8_ANT_FREQUENCY_USERAPP (u8)50 /* 2400MHz + this number 0 – 99 */
+#define U8_ANT_TX_POWER_USERAPP RADIO_TX_POWER_4DBM /* RADIO_TX_POWER_xxx */
+
 
 #endif /* __USER_APP1_H */
 
