@@ -1,11 +1,11 @@
 /*!*********************************************************************************************************************
-@file user_app2.h                                                                
-@brief Header file for user_app2
+@file user_app1.h                                                                
+@brief Header file for user_app1
 
 ----------------------------------------------------------------------------------------------------------------------
-To start a new task using this user_app2 as a template:
-1. Follow the instructions at the top of user_app2.c
-2. Use ctrl-h to find and replace all instances of "user_app2" with "yournewtaskname"
+To start a new task using this user_app1 as a template:
+1. Follow the instructions at the top of user_app1.c
+2. Use ctrl-h to find and replace all instances of "user_app1" with "yournewtaskname"
 3. Use ctrl-h to find and replace all instances of "UserApp2" with "YourNewTaskName"
 4. Use ctrl-h to find and replace all instances of "USER_APP2" with "YOUR_NEW_TASK_NAME"
 5. Add #include yournewtaskname.h" to configuration.h
@@ -30,7 +30,7 @@ Function Declarations
 /*------------------------------------------------------------------------------------------------------------------*/
 /*! @publicsection */                                                                                            
 /*--------------------------------------------------------------------------------------------------------------------*/
-
+void UserApp2_IntializeANT(void);
 
 /*------------------------------------------------------------------------------------------------------------------*/
 /*! @protectedsection */                                                                                            
@@ -49,15 +49,32 @@ State Machine Declarations
 ***********************************************************************************************************************/
 static void UserApp2SM_Idle(void);    
 static void UserApp2SM_Error(void);         
-
+static void UserApp2SM_WaitAntReady(void);
+static void UserApp2SM_WaitChannelOpen(void);
+static void UserApp2SM_ChannelOpen(void);
+static void UserApp2SM_WaitChannelClose(void);
+static void UserApp2SM_ChannelAwaitConnection(void);
 
 
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
+#define U8_ANT_CHANNEL_USERAPP (u8)ANT_CHANNEL_0 /* Channel 0 – 7 */
+#define U8_ANT_DEVICE_LO_USERAPP (u8)0x22 /* Low byte of two-byte Device # */
+#define U8_ANT_DEVICE_HI_USERAPP (u8)0x16 /* High byte of two-byte Device # */
+#define U8_ANT_DEVICE_TYPE_USERAPP (u8)1 /* 1 – 255 */
+#define U8_ANT_TRANSMISSION_TYPE_USERAPP (u8)1 /* 1-127 (MSB is pairing bit) */
+#define U8_ANT_CHANNEL_PERIOD_LO_USERAPP (u8)0x00 /* Low byte of two-byte channel period */
+#define U8_ANT_CHANNEL_PERIOD_HI_USERAPP (u8)0x20 /* High byte of two-byte channel period */
+#define U8_ANT_FREQUENCY_USERAPP (u8)50 /* 2400MHz + this number 0 – 99 */
+#define U8_ANT_TX_POWER_USERAPP RADIO_TX_POWER_4DBM /* RADIO_TX_POWER_xxx */
+
+#define U32_TIMEOUT_OPEN_CHANNEL 5000
+#define U32_TIMEOUT_CLOSE_CHANNEL 5000
 
 
 #endif /* __USER_APP2_H */
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* End of File                                                                                                        */
 /*--------------------------------------------------------------------------------------------------------------------*/

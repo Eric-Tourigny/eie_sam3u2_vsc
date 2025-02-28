@@ -55,9 +55,7 @@ extern volatile u32 G_u32SystemFlags;                     /*!< @brief From main.
 extern volatile u32 G_u32ApplicationFlags;                /*!< @brief From main.c */
 
 /* ANT Radio */
-extern volatile AntApplicationMessageType G_eAntApiCurrentMessageClass;
-extern volatile u8 G_au8AntApiCurrentMessageBytes[ANT_APPLICATION_MESSAGE_BYTES];
-extern volatile AntExtendedDataType G_sAntApiCurrentMessageExtData;
+extern volatile G_u32UserApp2ANTInfo;
 
 
 /***********************************************************************************************************************
@@ -99,7 +97,6 @@ enum {
   STATE_CHECK_MENU,
   STATE_CRASH_ANIMATION,
   STATE_WAIT_ANT_READY,
-  STATE_WAIT_ANT_OPEN,
 } typedef State_t;
 
 State_t currentState = STATE_INIT;
@@ -134,39 +131,7 @@ void enterCheckMenu(State_t prevState) {
 void enterCrashAnimation(State_t prevState) {}
 
 void enterWaitANTReady(State_t prevState) {
-  AntAssignChannelInfoType sChannelInfo;
-
-  if(AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_UNCONFIGURED)
-  {
-    sChannelInfo.AntChannel = U8_ANT_CHANNEL_PERIOD_HI_USERAPP;
-    sChannelInfo.AntChannelType = CHANNEL_TYPE_SLAVE;
-    sChannelInfo.AntChannelPeriodHi = U8_ANT_CHANNEL_PERIOD_HI_USERAPP;
-    sChannelInfo.AntChannelPeriodLo = U8_ANT_CHANNEL_PERIOD_LO_USERAPP;
-    
-    sChannelInfo.AntDeviceIdHi = U8_ANT_DEVICE_HI_USERAPP;
-    sChannelInfo.AntDeviceIdLo = U8_ANT_DEVICE_LO_USERAPP;
-    sChannelInfo.AntDeviceType = U8_ANT_DEVICE_TYPE_USERAPP;
-    sChannelInfo.AntTransmissionType = U8_ANT_TRANSMISSION_TYPE_USERAPP;
-    
-    sChannelInfo.AntFrequency = U8_ANT_FREQUENCY_USERAPP;
-    sChannelInfo.AntTxPower = U8_ANT_TX_POWER_USERAPP;
-    
-    sChannelInfo.AntNetwork = ANT_NETWORK_DEFAULT;
-    for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
-    {
-      sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
-    }
-
-    AntAssignChannel(&sChannelInfo);
-  }
-
-  LedOn(RED);
-}
-
-void enterWaitANTOpen(State_t prevState) {
-  AntOpenChannelNumber(U8_ANT_CHANNEL_USERAPP);
-  LedOff(RED);
-  LedOn(YELLOW);
+  UserApp2InitializeANT();
 }
 
 void (*stateTransition[])(State_t) = {
@@ -175,7 +140,6 @@ void (*stateTransition[])(State_t) = {
   enterCheckMenu,
   enterCrashAnimation,
   enterWaitANTReady,
-  enterWaitANTOpen,
 };
 
 void (*stateFunctionArray[])(void) = {
@@ -184,7 +148,6 @@ void (*stateFunctionArray[])(void) = {
   UserApp1SM_CheckMenu,
   UserApp1SM_CrashAnimation,
   UserApp1SM_WaitANTReady,
-  UserApp1SM_WaitANTOpen,
 };
 
 void gotoState(State_t targetState) {
@@ -233,87 +196,9 @@ bool getButtonInput() {
 }
 
 bool getANTInput() {
-  static u8 u8LastState = 0xff;
-  static u8 au8TickMessage[] = "EVENT x\n\r";
-  static u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
-  static u8 au8LastAntData[ ANT_APPLICATION_MESSAGE_BYTES ] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-  static u8 au8TestMessage[] = {0, 0, 0, 0, 0xa5, 0, 0, 0};
-  bool bGotNewData;
-
-  if (AntReadAppMessageBuffer())
-  {
-    //DebugPrintf("Message");
-    if (G_eAntApiCurrentMessageClass == ANT_DATA)
-    {
-      LedOff(PURPLE);
-      u8LastState = 0xff;
-      static bool bGotNewData = FALSE;
-
-      for(u8 i = 0; i < ANT_APPLICATION_MESSAGE_BYTES; i++) {
-        if (G_au8AntApiCurrentMessageBytes[i] != au8LastAntData[i]){
-          bGotNewData = TRUE;
-          au8LastAntData[i] = G_au8AntApiCurrentMessageBytes[i];
-          au8DataContent[2 * i] = HexToASCIICharLower(G_au8AntApiCurrentMessageBytes[i] >> 4);
-          au8DataContent[2*i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] & 0xf);
-        }
-      }
-
-      if (bGotNewData) {
-        bGotNewData = FALSE;
-        if (au8LastAntData[0] == 0xA5) 
-        {
-          for (int i = 1; i < 8; i++) 
-          {
-            if (au8LastAntData[i] == 1)
-            {
-              LedOn(i);
-            }
-            else
-            {
-              LedOff(i);
-            }
-          }
-        }
-        DebugPrintf(au8DataContent);
-        LcdClearChars(LINE1_START_ADDR, 20);
-        LcdMessage(LINE1_START_ADDR, au8DataContent);
-      }
-    }
-    else if (G_eAntApiCurrentMessageClass == ANT_TICK)
-    {
-      if (u8LastState != G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX])
-      {
-        u8LastState = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
-        au8TickMessage[6] = HexToASCIICharLower(u8LastState);
-        DebugPrintf(au8TickMessage);
-
-        switch (u8LastState)
-        {
-          case EVENT_RX_FAIL:
-          {
-            LedOn(PURPLE);
-            break;
-          }
-          case EVENT_RX_FAIL_GO_TO_SEARCH:
-          {
-            LedOff(BLUE);
-            LedOn(GREEN);
-            break;
-          }
-          case EVENT_RX_SEARCH_TIMEOUT:
-          {
-            DebugPrintf("Search timeout\r\n");
-            break;
-          }
-          default:
-          {
-            DebugPrintf("Unexpected Event\r\n");
-            break;
-          }
-        }
-      }
-    }
-  }
+  bool ANTJumpValue = G_u32UserApp2ANTInfo & 0x2;
+  G_u32UserApp2ANTInfo &= ~0x2;
+  return ANTJumpValue;
 }
 
 
@@ -395,8 +280,6 @@ State Machine Function Definitions
 /* What does this state do? */
 static void UserApp1SM_RunGame(void)
 {
-  bool bool_canJump = UserApp1_checkInputFunction();
-
   if(UserApp1_u8MillisecondCount-- == 0)
   {
     if (UserApp1_u8SubframeCount-- == 0)
@@ -417,7 +300,7 @@ static void UserApp1SM_RunGame(void)
       UserApp1_s16DinoVelocity = 0;
 
       /* Dino can jump if its on the ground */
-      if (bool_canJump)
+      if (UserApp1_checkInputFunction())
       {
         UserApp1_s16DinoVelocity = 500;
       }
@@ -479,17 +362,7 @@ void UserApp1SM_CrashAnimation() {
 
 
 void UserApp1SM_WaitANTReady() {
-  if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_CONFIGURED) {
-    gotoState(STATE_WAIT_ANT_OPEN);
-  }
-}
-
-void UserApp1SM_WaitANTOpen() {
-  if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_OPEN)
-  {
-    LedOff(YELLOW);
-    LedOn(GREEN);
-
+  if (G_u32UserApp2ANTInfo & 0x1) {
     gotoState(STATE_RUN_GAME);
   }
 }
