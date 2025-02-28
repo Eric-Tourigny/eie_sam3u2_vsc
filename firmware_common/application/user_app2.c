@@ -110,7 +110,7 @@ void UserApp2InitializeANT(void) {
 
   if(AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_UNCONFIGURED)
   {
-    sChannelInfo.AntChannel = U8_ANT_CHANNEL_PERIOD_HI_USERAPP;
+    sChannelInfo.AntChannel = U8_ANT_CHANNEL_USERAPP;
     sChannelInfo.AntChannelType = CHANNEL_TYPE_SLAVE;
     sChannelInfo.AntChannelPeriodHi = U8_ANT_CHANNEL_PERIOD_HI_USERAPP;
     sChannelInfo.AntChannelPeriodLo = U8_ANT_CHANNEL_PERIOD_LO_USERAPP;
