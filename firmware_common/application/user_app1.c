@@ -64,13 +64,13 @@ static fnCode_type UserApp1_pfStateMachine;               /*!< @brief The state 
 static u8 UserApp1_u8cactusBitmaps[12][8] = {{}, {}, {}, {}, {}, {}, CACTUS_PATTERN, {}, {}, {}, {}, {}};
 static u8 UserAPP1_u8dino_pattern[8] = DINO_PATTERN;
 static u8 UserApp1_u8MillisecondCount = 0;
-static u8 u8CactusPositions[21] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', CACTUS_FRONT_NUM, CACTUS_BACK_NUM, ' ', ' ', ' ', ' ' , ' ', ' ', ' ', '\0'};
-static u8 u8SubframeCount = 0;
-static s16 s16DinoHeight = 0x0000;
-static s16 s16DinoVelocity = 0;
-static u8 (*u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 11;
-static u8 (*u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 11;
-static u8 u8FramesToNextCactus = 5;
+static u8 UserApp1_u8CactusPositions[21];
+static u8 UserApp1_u8SubframeCount = 0;
+static s16 UserApp1_s16DinoHeight = 0x0000;
+static s16 UserApp1_s16DinoVelocity = 0;
+static u8 (*UserApp1_u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 11;
+static u8 (*UserApp1_u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 11;
+static u8 UserApp1_u8FramesToNextCactus = 5;
 
 /**********************************************************************************************************************
 Function Definitions
@@ -99,14 +99,14 @@ void enterInit(State_t prevState) {}
 void enterRunGame(State_t prevState) {
   UserApp1_u8MillisecondCount = 0;
   for (u8 u8Index = 0; u8Index < 20; u8Index++)
-    u8CactusPositions[u8Index] = ' ';
-  u8CactusPositions[20] = '\0';  
-  u8SubframeCount = 0;
-  s16DinoHeight = 0x0000;
-  s16DinoVelocity = 0;
-  u8DinoBottomMask = UserApp1_u8cactusBitmaps + 11;
-  u8DinoTopMask = UserApp1_u8cactusBitmaps + 11;
-  u8FramesToNextCactus = 5;
+    UserApp1_u8CactusPositions[u8Index] = ' ';
+  UserApp1_u8CactusPositions[20] = '\0';  
+  UserApp1_u8SubframeCount = 0;
+  UserApp1_s16DinoHeight = 0x0000;
+  UserApp1_s16DinoVelocity = 0;
+  UserApp1_u8DinoBottomMask = UserApp1_u8cactusBitmaps + 11;
+  UserApp1_u8DinoTopMask = UserApp1_u8cactusBitmaps + 11;
+  UserApp1_u8FramesToNextCactus = 5;
 }
 
 void  enterCheckMenu(State_t prevState) {
@@ -218,68 +218,68 @@ static void UserApp1SM_RunGame(void)
 {
   if(UserApp1_u8MillisecondCount-- == 0)
   {
-    if (u8SubframeCount-- == 0)
+    if (UserApp1_u8SubframeCount-- == 0)
     {
       for(u8 u8Index = 0; u8Index < 19; u8Index++) {
-        u8CactusPositions[u8Index] = u8CactusPositions[u8Index + 1];
+        UserApp1_u8CactusPositions[u8Index] = UserApp1_u8CactusPositions[u8Index + 1];
       }
 
-      if (--u8FramesToNextCactus == 1) {
-        u8CactusPositions[19] = CACTUS_FRONT_NUM;
-      } else if (u8FramesToNextCactus == 0)
+      if (--UserApp1_u8FramesToNextCactus == 1) {
+        UserApp1_u8CactusPositions[19] = CACTUS_FRONT_NUM;
+      } else if (UserApp1_u8FramesToNextCactus == 0)
       {
-        u8CactusPositions[19] = CACTUS_BACK_NUM;
-        u8FramesToNextCactus = 2;
+        UserApp1_u8CactusPositions[19] = CACTUS_BACK_NUM;
+        UserApp1_u8FramesToNextCactus = 2;
       } else {
-        u8CactusPositions[19] = ' ';
+        UserApp1_u8CactusPositions[19] = ' ';
       }
 
-      LcdMessage(LINE2_START_ADDR + 1, u8CactusPositions + 1);
+      LcdMessage(LINE2_START_ADDR + 1, UserApp1_u8CactusPositions + 1);
 
-      u8SubframeCount = U8_FRAME_SUBFRAMES;
+      UserApp1_u8SubframeCount = U8_FRAME_SUBFRAMES;
     }
 
-    u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 5 - u8SubframeCount;
+    u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 5 - UserApp1_u8SubframeCount;
     LcdModifyCustomChar(CACTUS_FRONT_NUM, *u8cactusFrontBitPattern);
-    if (u8CactusPositions[0] == CACTUS_FRONT_NUM) u8DinoBottomMask = u8cactusFrontBitPattern;
-    u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 11 - u8SubframeCount;
+    if (UserApp1_u8CactusPositions[0] == CACTUS_FRONT_NUM) UserApp1_u8DinoBottomMask = u8cactusFrontBitPattern;
+    u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 11 - UserApp1_u8SubframeCount;
     LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
-    if (u8CactusPositions[0] == CACTUS_BACK_NUM) u8DinoBottomMask = u8cactusBackBitPattern;
+    if (UserApp1_u8CactusPositions[0] == CACTUS_BACK_NUM) UserApp1_u8DinoBottomMask = u8cactusBackBitPattern;
 
 
     /* Updates dino height and sees if its reached the ground*/
-    s16DinoHeight += s16DinoVelocity;
-    s16DinoVelocity -= 50;
-    if (s16DinoHeight <= 0)
+    UserApp1_s16DinoHeight += UserApp1_s16DinoVelocity;
+    UserApp1_s16DinoVelocity -= 50;
+    if (UserApp1_s16DinoHeight <= 0)
     {
-      s16DinoHeight = 0;
-      s16DinoVelocity = 0;
+      UserApp1_s16DinoHeight = 0;
+      UserApp1_s16DinoVelocity = 0;
 
       /* Dino can jump if its on the ground */
       if (IsButtonPressed(BUTTON0))
       {
         ButtonAcknowledge(BUTTON0);
-        s16DinoVelocity = 500;
+        UserApp1_s16DinoVelocity = 500;
       }
     }
 
     u8 dino_pattern[8] = {};
 
     /* Dino height in pixels is dino height divided by 256 */
-    u8 pixel_height = ((u16)s16DinoHeight) >> 8;
+    u8 pixel_height = ((u16)UserApp1_s16DinoHeight) >> 8;
     
 
     /* Determines custom char pattern for bottom leftmost tile */
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
     {
       if ((s8)(7 - pixel_height - u8Index) >= 0) {
-        dino_pattern[u8Index] = UserAPP1_u8dino_pattern[u8Index + pixel_height] | (*u8DinoBottomMask)[u8Index];
-        if (UserAPP1_u8dino_pattern[u8Index + pixel_height] & (*u8DinoBottomMask)[u8Index]) {
+        dino_pattern[u8Index] = UserAPP1_u8dino_pattern[u8Index + pixel_height] | (*UserApp1_u8DinoBottomMask)[u8Index];
+        if (UserAPP1_u8dino_pattern[u8Index + pixel_height] & (*UserApp1_u8DinoBottomMask)[u8Index]) {
           gotoState(STATE_CHECK_MENU);
         }
       }
       else
-        dino_pattern[u8Index] = (*u8DinoBottomMask)[u8Index];
+        dino_pattern[u8Index] = (*UserApp1_u8DinoBottomMask)[u8Index];
     }
 
     LcdModifyCustomChar(DINO_BOTTOM_NUM, dino_pattern);
