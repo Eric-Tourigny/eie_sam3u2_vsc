@@ -89,7 +89,8 @@ Function Definitions
 enum { 
   STATE_INIT = 0,
   STATE_RUN_GAME,
-  STATE_CHECK_MENU
+  STATE_CHECK_MENU,
+  STATE_CRASH_ANIMATION,
 } typedef State_t;
 
 State_t currentState = STATE_INIT;
@@ -109,7 +110,7 @@ void enterRunGame(State_t prevState) {
   UserApp1_u8FramesToNextCactus = 5;
 }
 
-void  enterCheckMenu(State_t prevState) {
+void enterCheckMenu(State_t prevState) {
   LcdClearChars(LINE1_START_ADDR, 20);
   LcdClearChars(LINE2_START_ADDR, 20);
   LcdMessage(LINE1_START_ADDR, "Press BUTTON 0 to");
@@ -117,16 +118,20 @@ void  enterCheckMenu(State_t prevState) {
   UserApp1_pfStateMachine = UserApp1SM_CheckMenu;
 }
 
+void enterCrashAnimation(State_t prevState) {}
+
 static void (*stateTransition[])(State_t) = {
   enterInit,
   enterRunGame,
-  enterCheckMenu
+  enterCheckMenu,
+  enterCrashAnimation,
 };
 
 static void (*stateFunctionArray[])(void) = {
   UserApp1Initialize,
   UserApp1SM_RunGame,
   UserApp1SM_CheckMenu,
+  UserApp1SM_CrashAnimation,
 };
 
 static void gotoState(State_t targetState) {
@@ -275,7 +280,7 @@ static void UserApp1SM_RunGame(void)
       if ((s8)(7 - pixel_height - u8Index) >= 0) {
         dino_pattern[u8Index] = UserAPP1_u8dino_pattern[u8Index + pixel_height] | (*UserApp1_u8DinoBottomMask)[u8Index];
         if (UserAPP1_u8dino_pattern[u8Index + pixel_height] & (*UserApp1_u8DinoBottomMask)[u8Index]) {
-          gotoState(STATE_CHECK_MENU);
+          gotoState(STATE_CRASH_ANIMATION);
         }
       }
       else
@@ -312,6 +317,9 @@ static void UserApp1SM_CheckMenu() {
   }
 }
 
+static void UserApp1SM_CrashAnimation() {
+  gotoState(STATE_CHECK_MENU);
+}
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
