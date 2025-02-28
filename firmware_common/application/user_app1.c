@@ -72,6 +72,8 @@ static u8 (*UserApp1_u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 11;
 static u8 (*UserApp1_u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 11;
 static u8 UserApp1_u8FramesToNextCactus = 5;
 
+bool (*UserApp1_checkInputFunction)();
+
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -98,6 +100,11 @@ State_t currentState = STATE_INIT;
 void enterInit(State_t prevState) {}
 
 void enterRunGame(State_t prevState) {
+  LcdClearChars(LINE1_START_ADDR, 20);
+  LcdClearChars(LINE2_START_ADDR, 20);
+  LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
+  LcdPutChar(LINE2_START_ADDR, DINO_BOTTOM_NUM);
+
   UserApp1_u8MillisecondCount = 0;
   for (u8 u8Index = 0; u8Index < 20; u8Index++)
     UserApp1_u8CactusPositions[u8Index] = ' ';
@@ -120,26 +127,64 @@ void enterCheckMenu(State_t prevState) {
 
 void enterCrashAnimation(State_t prevState) {}
 
-static void (*stateTransition[])(State_t) = {
+void (*stateTransition[])(State_t) = {
   enterInit,
   enterRunGame,
   enterCheckMenu,
   enterCrashAnimation,
 };
 
-static void (*stateFunctionArray[])(void) = {
+void (*stateFunctionArray[])(void) = {
   UserApp1Initialize,
   UserApp1SM_RunGame,
   UserApp1SM_CheckMenu,
   UserApp1SM_CrashAnimation,
 };
 
-static void gotoState(State_t targetState) {
+void gotoState(State_t targetState) {
   stateTransition[targetState](currentState);
   currentState = targetState;
   UserApp1_pfStateMachine = stateFunctionArray[currentState];
 }
 
+
+
+
+void shiftCactuses() {
+  for(u8 u8Index = 0; u8Index < 19; u8Index++) {
+    UserApp1_u8CactusPositions[u8Index] = UserApp1_u8CactusPositions[u8Index + 1];
+  }
+
+  if (--UserApp1_u8FramesToNextCactus == 1) {
+    UserApp1_u8CactusPositions[19] = CACTUS_FRONT_NUM;
+  } else if (UserApp1_u8FramesToNextCactus == 0)
+  {
+    UserApp1_u8CactusPositions[19] = CACTUS_BACK_NUM;
+    UserApp1_u8FramesToNextCactus = 2;
+  } else {
+    UserApp1_u8CactusPositions[19] = ' ';
+  }
+
+  LcdMessage(LINE2_START_ADDR + 1, UserApp1_u8CactusPositions + 1);
+}
+
+void updateCactusCustomCharacters() {
+  u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 5 - UserApp1_u8SubframeCount;
+  LcdModifyCustomChar(CACTUS_FRONT_NUM, *u8cactusFrontBitPattern);
+  if (UserApp1_u8CactusPositions[0] == CACTUS_FRONT_NUM) UserApp1_u8DinoBottomMask = u8cactusFrontBitPattern;
+  u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 11 - UserApp1_u8SubframeCount;
+  LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
+  if (UserApp1_u8CactusPositions[0] == CACTUS_BACK_NUM) UserApp1_u8DinoBottomMask = u8cactusBackBitPattern;
+}
+
+
+bool getButtonInput() {
+  bool buttonPressed = WasButtonPressed(BUTTON0);
+  if (buttonPressed) {
+    ButtonAcknowledge(BUTTON0);
+  }
+  return buttonPressed;
+}
 
 
 
@@ -225,31 +270,11 @@ static void UserApp1SM_RunGame(void)
   {
     if (UserApp1_u8SubframeCount-- == 0)
     {
-      for(u8 u8Index = 0; u8Index < 19; u8Index++) {
-        UserApp1_u8CactusPositions[u8Index] = UserApp1_u8CactusPositions[u8Index + 1];
-      }
-
-      if (--UserApp1_u8FramesToNextCactus == 1) {
-        UserApp1_u8CactusPositions[19] = CACTUS_FRONT_NUM;
-      } else if (UserApp1_u8FramesToNextCactus == 0)
-      {
-        UserApp1_u8CactusPositions[19] = CACTUS_BACK_NUM;
-        UserApp1_u8FramesToNextCactus = 2;
-      } else {
-        UserApp1_u8CactusPositions[19] = ' ';
-      }
-
-      LcdMessage(LINE2_START_ADDR + 1, UserApp1_u8CactusPositions + 1);
-
+      shiftCactuses();
       UserApp1_u8SubframeCount = U8_FRAME_SUBFRAMES;
     }
 
-    u8 (*u8cactusFrontBitPattern)[8] = UserApp1_u8cactusBitmaps + 5 - UserApp1_u8SubframeCount;
-    LcdModifyCustomChar(CACTUS_FRONT_NUM, *u8cactusFrontBitPattern);
-    if (UserApp1_u8CactusPositions[0] == CACTUS_FRONT_NUM) UserApp1_u8DinoBottomMask = u8cactusFrontBitPattern;
-    u8 (*u8cactusBackBitPattern)[8] = UserApp1_u8cactusBitmaps + 11 - UserApp1_u8SubframeCount;
-    LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
-    if (UserApp1_u8CactusPositions[0] == CACTUS_BACK_NUM) UserApp1_u8DinoBottomMask = u8cactusBackBitPattern;
+    updateCactusCustomCharacters();
 
 
     /* Updates dino height and sees if its reached the ground*/
@@ -261,9 +286,8 @@ static void UserApp1SM_RunGame(void)
       UserApp1_s16DinoVelocity = 0;
 
       /* Dino can jump if its on the ground */
-      if (IsButtonPressed(BUTTON0))
+      if (UserApp1_checkInputFunction())
       {
-        ButtonAcknowledge(BUTTON0);
         UserApp1_s16DinoVelocity = 500;
       }
     }
@@ -306,14 +330,13 @@ static void UserApp1SM_RunGame(void)
      
 
 static void UserApp1SM_CheckMenu() {
-  if(WasButtonPressed(BUTTON0)) {
+  if (WasButtonPressed(BUTTON0)) {
     ButtonAcknowledge(BUTTON0);
-    LcdClearChars(LINE1_START_ADDR, 20);
-    LcdClearChars(LINE2_START_ADDR, 20);
-    LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
-    LcdPutChar(LINE2_START_ADDR, DINO_BOTTOM_NUM);
-
+    UserApp1_checkInputFunction = getButtonInput;
     gotoState(STATE_RUN_GAME);
+  }
+  if (WasButtonPressed(BUTTON1)) {
+    ButtonAcknowledge(BUTTON1);
   }
 }
 
