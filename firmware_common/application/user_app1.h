@@ -48,7 +48,6 @@ void UserApp1RunActiveState(void);
 State Machine Declarations
 ***********************************************************************************************************************/
 static void UserApp1SM_RunGame(void);
-static void UserApp1SM_MenuSetup(void);
 static void UserApp1SM_CheckMenu(void);
 static void UserApp1SM_Error(void);         
 

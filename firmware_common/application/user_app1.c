@@ -87,19 +87,16 @@ Function Definitions
 
 
 enum { 
-  INIT = 0,
-  RUN_GAME,
-  CHECK_MENU
+  STATE_INIT = 0,
+  STATE_RUN_GAME,
+  STATE_CHECK_MENU
 } typedef State_t;
 
-State_t currentState = INIT;
+State_t currentState = STATE_INIT;
 
-void enterInit(State_t prevState) {
+void enterInit(State_t prevState) {}
 
-}
-
-
-void  enterRunGame(State_t prevState) {
+void enterRunGame(State_t prevState) {
   UserApp1_u8MillisecondCount = 0;
   for (u8 u8Index = 0; u8Index < 20; u8Index++)
     u8CactusPositions[u8Index] = ' ';
@@ -112,9 +109,12 @@ void  enterRunGame(State_t prevState) {
   u8FramesToNextCactus = 5;
 }
 
-
 void  enterCheckMenu(State_t prevState) {
-
+  LcdClearChars(LINE1_START_ADDR, 20);
+  LcdClearChars(LINE2_START_ADDR, 20);
+  LcdMessage(LINE1_START_ADDR, "Press BUTTON 0 to");
+  LcdMessage(LINE2_START_ADDR, "begin");
+  UserApp1_pfStateMachine = UserApp1SM_CheckMenu;
 }
 
 static void (*stateTransition[])(State_t) = {
@@ -171,7 +171,7 @@ void UserApp1Initialize(void)
   /* If good initialization, set state to Idle */
   if( 1 )
   {
-    UserApp1_pfStateMachine = UserApp1SM_MenuSetup;
+    gotoState(STATE_CHECK_MENU);
   }
   else
   {
@@ -216,9 +216,6 @@ State Machine Function Definitions
 /* What does this state do? */
 static void UserApp1SM_RunGame(void)
 {
-
-
-
   if(UserApp1_u8MillisecondCount-- == 0)
   {
     if (u8SubframeCount-- == 0)
@@ -278,7 +275,7 @@ static void UserApp1SM_RunGame(void)
       if ((s8)(7 - pixel_height - u8Index) >= 0) {
         dino_pattern[u8Index] = UserAPP1_u8dino_pattern[u8Index + pixel_height] | (*u8DinoBottomMask)[u8Index];
         if (UserAPP1_u8dino_pattern[u8Index + pixel_height] & (*u8DinoBottomMask)[u8Index]) {
-          UserApp1_pfStateMachine = UserApp1SM_MenuSetup;
+          gotoState(STATE_CHECK_MENU);
         }
       }
       else
@@ -303,14 +300,6 @@ static void UserApp1SM_RunGame(void)
 } /* end UserApp1SM_Idle() */
      
 
-static void UserApp1SM_MenuSetup() {
-  LcdClearChars(LINE1_START_ADDR, 20);
-  LcdClearChars(LINE2_START_ADDR, 20);
-  LcdMessage(LINE1_START_ADDR, "Press BUTTON 0 to");
-  LcdMessage(LINE2_START_ADDR, "begin");
-  UserApp1_pfStateMachine = UserApp1SM_CheckMenu;
-}
-
 static void UserApp1SM_CheckMenu() {
   if(WasButtonPressed(BUTTON0)) {
     ButtonAcknowledge(BUTTON0);
@@ -319,7 +308,7 @@ static void UserApp1SM_CheckMenu() {
     LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
     LcdPutChar(LINE2_START_ADDR, DINO_BOTTOM_NUM);
 
-    UserApp1_pfStateMachine = UserApp1SM_RunGame;
+    gotoState(STATE_RUN_GAME);
   }
 }
 
