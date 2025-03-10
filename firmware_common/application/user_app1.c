@@ -75,6 +75,8 @@ static u8 (*UserApp1_u8DinoBottomMask)[8] = UserApp1_u8cactusBitmaps + 11;
 static u8 (*UserApp1_u8DinoTopMask)[8] = UserApp1_u8cactusBitmaps + 11;
 static u8 UserApp1_u8FramesToNextCactus = 5;
 
+static u32 UserApp1_u32LSFRValue;
+
 bool (*UserApp1_checkInputFunction)();
 
 /**********************************************************************************************************************
@@ -169,7 +171,7 @@ void shiftCactuses() {
   } else if (UserApp1_u8FramesToNextCactus == 0)
   {
     UserApp1_u8CactusPositions[19] = CACTUS_BACK_NUM;
-    UserApp1_u8FramesToNextCactus = 2;
+    UserApp1_u8FramesToNextCactus = 2 + linearFeedbackShiftRegister() + linearFeedbackShiftRegister();
   } else {
     UserApp1_u8CactusPositions[19] = ' ';
   }
@@ -201,6 +203,20 @@ bool getANTInput() {
   return ANTJumpValue;
 }
 
+int linearFeedbackShiftRegister() {
+  bool newBit;
+  for (u8 u8Index = 32; u8Index != 0; u8Index--) {
+    newBit = (UserApp1_u32LSFRValue ^ (UserApp1_u32LSFRValue >> 1) ^ (UserApp1_u32LSFRValue >> 22) ^ (UserApp1_u32LSFRValue >> 31)) & 1;
+    UserApp1_u32LSFRValue >>= 1;
+    UserApp1_u32LSFRValue |= (u32)newBit << 31;
+  }
+  return newBit;
+}
+
+int intializeLinearFeedbackShiftRegister() {
+  UserApp1_u32LSFRValue = G_u32SystemTime1ms;
+}
+
 
 /*!--------------------------------------------------------------------------------------------------------------------
 @fn void UserApp1Initialize(void)
@@ -219,6 +235,7 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  intializeLinearFeedbackShiftRegister();
 
   LcdCommand(LCD_CLEAR_CMD);
   LcdCommand(LCD_FUNCTION_CMD);     //required for custom characters to function
