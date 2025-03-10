@@ -4,13 +4,13 @@
 should be replaced by something specific to the task.
 
 ----------------------------------------------------------------------------------------------------------------------
-To start a new task using this user_app2 as a template:
- 1. Copy both user_app2.c and user_app2.h to the Application directory
+To start a new task using this user_app3 as a template:
+ 1. Copy both user_app3.c and user_app3.h to the Application directory
  2. Rename the files yournewtaskname.c and yournewtaskname.h
  3. Add yournewtaskname.c and yournewtaskname.h to the Application Include and Source groups in the IAR project
- 4. Use ctrl-h (make sure "Match Case" is checked) to find and replace all instances of "user_app2" with "yournewtaskname"
+ 4. Use ctrl-h (make sure "Match Case" is checked) to find and replace all instances of "user_app3" with "yournewtaskname"
  5. Use ctrl-h to find and replace all instances of "UserApp3" with "YourNewTaskName"
- 6. Use ctrl-h to find and replace all instances of "USER_APP1" with "YOUR_NEW_TASK_NAME"
+ 6. Use ctrl-h to find and replace all instances of "USER_APP3" with "YOUR_NEW_TASK_NAME"
  7. Add a call to YourNewTaskNameInitialize() in the init section of main
  8. Add a call to YourNewTaskNameRunActiveState() in the Super Loop section of main
  9. Update yournewtaskname.h per the instructions at the top of yournewtaskname.h

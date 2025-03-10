@@ -89,8 +89,8 @@ int main(void)
  
   /* Application initialization */
   BladeApiInitialize();
-  UserApp1Initialize();
-  UserApp2Initialize();
+  DinoGameInitialize();
+  AntRadioInitialize();
   UserApp3Initialize();
 
   /* Exit initialization */
@@ -129,8 +129,8 @@ int main(void)
 
     /* Applications */
     BladeApiRunActiveState();
-    UserApp1RunActiveState();
-    UserApp2RunActiveState();
+    DinoGameRunActiveState();
+    AntRadioRunActiveState();
     UserApp3RunActiveState();
         
     /* System sleep */

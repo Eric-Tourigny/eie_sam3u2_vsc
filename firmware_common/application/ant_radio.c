@@ -1,25 +1,10 @@
 /*!*********************************************************************************************************************
-@file user_app1.c                                                                
-@brief User's tasks / applications are written here.  This description
-should be replaced by something specific to the task.
-
-----------------------------------------------------------------------------------------------------------------------
-To start a new task using this user_app1 as a template:
- 1. Copy both user_app1.c and user_app1.h to the Application directory
- 2. Rename the files yournewtaskname.c and yournewtaskname.h
- 3. Add yournewtaskname.c and yournewtaskname.h to the Application Include and Source groups in the IAR project
- 4. Use ctrl-h (make sure "Match Case" is checked) to find and replace all instances of "user_app1" with "yournewtaskname"
- 5. Use ctrl-h to find and replace all instances of "UserApp2" with "YourNewTaskName"
- 6. Use ctrl-h to find and replace all instances of "USER_APP2" with "YOUR_NEW_TASK_NAME"
- 7. Add a call to YourNewTaskNameInitialize() in the init section of main
- 8. Add a call to YourNewTaskNameRunActiveState() in the Super Loop section of main
- 9. Update yournewtaskname.h per the instructions at the top of yournewtaskname.h
-10. Delete this text (between the dashed lines) and update the Description below to describe your task
-----------------------------------------------------------------------------------------------------------------------
-
+@file ant_radio.c                                                                
+@brief Handles connection with the ANT radio, placing new messages into G_u32AntRadioANTInfo
 ------------------------------------------------------------------------------------------------------------------------
 GLOBALS
-- NONE
+- G_u32AntRadioFlags
+- G_u32AntRadioANTInfo
 
 CONSTANTS
 - NONE
@@ -31,8 +16,8 @@ PUBLIC FUNCTIONS
 - NONE
 
 PROTECTED FUNCTIONS
-- void UserApp2Initialize(void)
-- void UserApp2RunActiveState(void)
+- void AntRadioInitialize(void)
+- void AntRadioRunActiveState(void)
 
 
 **********************************************************************************************************************/
@@ -41,11 +26,11 @@ PROTECTED FUNCTIONS
 
 /***********************************************************************************************************************
 Global variable definitions with scope across entire project.
-All Global variable names shall start with "G_<type>UserApp2"
+All Global variable names shall start with "G_<type>AntRadio"
 ***********************************************************************************************************************/
 /* New variables */
-volatile u32 G_u32UserApp2Flags;                          /*!< @brief Global state flags */
-volatile u32 G_u32UserApp2ANTInfo;
+volatile u32 G_u32AntRadioFlags;                          /*!< @brief Global state flags */
+volatile u32 G_u32AntRadioANTInfo;
 
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -62,14 +47,14 @@ extern volatile AntExtendedDataType G_sAntApiCurrentMessageExtData;
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
-Variable names shall start with "UserApp2_<type>" and be declared as static.
+Variable names shall start with "AntRadio_<type>" and be declared as static.
 ***********************************************************************************************************************/
-static fnCode_type UserApp2_pfStateMachine;               /*!< @brief The state machine function pointer */
-static u32 UserApp2_u32Timeout;
-static u32 UserApp2_u32TickMsgCount = 0;
-static u32 UserApp2_u32DataMsgCount = 0;
+static fnCode_type AntRadio_pfStateMachine;               /*!< @brief The state machine function pointer */
+static u32 AntRadio_u32Timeout;
+static u32 AntRadio_u32TickMsgCount = 0;
+static u32 AntRadio_u32DataMsgCount = 0;
 
-//static u32 UserApp2_u32Timeout;                           /*!< @brief Timeout counter used across states */
+//static u32 AntRadio_u32Timeout;                           /*!< @brief Timeout counter used across states */
 
 
 /**********************************************************************************************************************
@@ -85,7 +70,7 @@ Function Definitions
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 /*!--------------------------------------------------------------------------------------------------------------------
-@fn void UserApp2Initialize(void)
+@fn void AntRadioInitialize(void)
 
 @brief
 Initializes the State Machine and its variables.
@@ -99,13 +84,13 @@ Promises:
 - NONE
 
 */
-void UserApp2Initialize(void)
+void AntRadioInitialize(void)
 {
-  UserApp2_pfStateMachine = UserApp2SM_Idle;
+  AntRadio_pfStateMachine = AntRadioSM_Idle;
 }
 
 
-void UserApp2InitializeANT(void) {
+void AntRadioInitializeANT(void) {
    AntAssignChannelInfoType sChannelInfo;
 
   if(AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_UNCONFIGURED)
@@ -130,29 +115,25 @@ void UserApp2InitializeANT(void) {
     }
     
     LedOn(RED);
-    LcdClearChars(LINE1_START_ADDR, 20);
-    LcdClearChars(LINE2_START_ADDR, 20);
-    LcdMessage(LINE1_START_ADDR, "ANT Slave test");
   }
-
 
 
   /* If good initialization, set state to Idle */
   if( AntAssignChannel(&sChannelInfo) )
   {
-    UserApp2_pfStateMachine = UserApp2SM_WaitAntReady;
+    AntRadio_pfStateMachine = AntRadioSM_WaitAntReady;
   }
   else
   {
     /* The task isn't properly initialized, so shut it down and don't run */
-    UserApp2_pfStateMachine = UserApp2SM_Error;
+    AntRadio_pfStateMachine = AntRadioSM_Error;
   }
 
-} /* end UserApp2Initialize() */
+} /* end AntRadioInitialize() */
 
   
 /*!----------------------------------------------------------------------------------------------------------------------
-@fn void UserApp2RunActiveState(void)
+@fn void AntRadioRunActiveState(void)
 
 @brief Selects and runs one iteration of the current state in the state machine.
 
@@ -166,11 +147,11 @@ Promises:
 - Calls the function to pointed by the state machine function pointer
 
 */
-void UserApp2RunActiveState(void)
+void AntRadioRunActiveState(void)
 {
-  UserApp2_pfStateMachine();
+  AntRadio_pfStateMachine();
 
-} /* end UserApp2RunActiveState */
+} /* end AntRadioRunActiveState */
 
 
 /*------------------------------------------------------------------------------------------------------------------*/
@@ -182,60 +163,60 @@ void UserApp2RunActiveState(void)
 State Machine Function Definitions
 **********************************************************************************************************************/
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* What does this state do? */
-static void UserApp2SM_Idle(void)
+/* Idle state, for when radio not in use */
+static void AntRadioSM_Idle(void)
 {
 
-} /* end UserApp2SM_Idle() */
+} /* end AntRadioSM_Idle() */
 
 
 
 /*!--------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ANT channel to be configured */
-void UserApp2SM_WaitAntReady(void)
+void AntRadioSM_WaitAntReady(void)
 {
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_CONFIGURED) 
   {
     LedOff(RED);
     LedOn(YELLOW);
     AntOpenChannelNumber(U8_ANT_CHANNEL_USERAPP);
-    UserApp2_u32Timeout = G_u32SystemTime1ms;
-    UserApp2_pfStateMachine = UserApp2SM_WaitChannelOpen;
+    AntRadio_u32Timeout = G_u32SystemTime1ms;
+    AntRadio_pfStateMachine = AntRadioSM_WaitChannelOpen;
   }
 
-} /* end UserApp2RunActiveState */
+} /* end AntRadioRunActiveState */
 
 
 /*!--------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ANT channel to be open */
-void UserApp2SM_WaitChannelOpen(void)
+void AntRadioSM_WaitChannelOpen(void)
 {
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_OPEN)
   {
     LedOff(YELLOW);
     LedOn(GREEN);
-    UserApp2_pfStateMachine = UserApp2SM_ChannelAwaitConnection;
+    AntRadio_pfStateMachine = AntRadioSM_ChannelAwaitConnection;
   }
 
-  if (IsTimeUp(&UserApp2_u32Timeout, U32_TIMEOUT_OPEN_CHANNEL)) 
+  if (IsTimeUp(&AntRadio_u32Timeout, U32_TIMEOUT_OPEN_CHANNEL)) 
   {
     AntCloseChannelNumber(U8_ANT_CHANNEL_USERAPP);
     LedOff(GREEN);
     LedOn(YELLOW);
-    UserApp2_pfStateMachine = UserApp2SM_Idle;
+    AntRadio_pfStateMachine = AntRadioSM_Idle;
   }
-} /* end UserApp2SM_WaitChannelOpen */  
+} /* end AntRadioSM_WaitChannelOpen */  
 
-void UserApp2SM_ChannelAwaitConnection(void) {
+void AntRadioSM_ChannelAwaitConnection(void) {
   if (AntReadAppMessageBuffer()) {
     LedOff(GREEN);
     LedOn(BLUE);
-    G_u32UserApp2ANTInfo |= 1;
-    UserApp2_pfStateMachine = UserApp2SM_ChannelOpen;
+    G_u32AntRadioANTInfo |= 1;
+    AntRadio_pfStateMachine = AntRadioSM_ChannelOpen;
   }
 }
 
-void UserApp2SM_ChannelOpen(void) {
+void AntRadioSM_ChannelOpen(void) {
   static u8 u8LastState = 0xff;
   static u8 au8TickMessage[] = "EVENT x\n\r";
   static u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
@@ -252,8 +233,8 @@ void UserApp2SM_ChannelOpen(void) {
     LedOff(BLUE);
     LedOn(GREEN);
     
-    UserApp2_u32Timeout = G_u32SystemTime1ms;
-    UserApp2_pfStateMachine = UserApp2SM_WaitChannelClose;
+    AntRadio_u32Timeout = G_u32SystemTime1ms;
+    AntRadio_pfStateMachine = AntRadioSM_WaitChannelClose;
   }
 
   if (AntReadAppMessageBuffer())
@@ -280,12 +261,12 @@ void UserApp2SM_ChannelOpen(void) {
         bGotNewData = FALSE;
         DebugPrintf(au8DataContent);
         
-        G_u32UserApp2ANTInfo |= 0x2;
+        G_u32AntRadioANTInfo |= 0x2;
       }
     }
     else if (G_eAntApiCurrentMessageClass == ANT_TICK)
     {
-      UserApp2_u32TickMsgCount++;
+      AntRadio_u32TickMsgCount++;
       if (u8LastState != G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX])
       {
         u8LastState = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
@@ -321,31 +302,31 @@ void UserApp2SM_ChannelOpen(void) {
   }
 }
 
-static void UserApp2SM_WaitChannelClose(void) {
+static void AntRadioSM_WaitChannelClose(void) {
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_CLOSED)
   {
     LedOff(GREEN);
     LedOn(YELLOW);
 
-    UserApp2_pfStateMachine = UserApp2SM_Idle;
+    AntRadio_pfStateMachine = AntRadioSM_Idle;
   }
 
-  if ( IsTimeUp(&UserApp2_u32Timeout, U32_TIMEOUT_CLOSE_CHANNEL))
+  if ( IsTimeUp(&AntRadio_u32Timeout, U32_TIMEOUT_CLOSE_CHANNEL))
   {
     LedOff(GREEN);
     LedBlink(RED, LED_4HZ);
 
-    UserApp2_pfStateMachine = UserApp2SM_Error;
+    AntRadio_pfStateMachine = AntRadioSM_Error;
   }
 }
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
-static void UserApp2SM_Error(void)          
+static void AntRadioSM_Error(void)          
 {
   
-} /* end UserApp2SM_Error() */
+} /* end AntRadioSM_Error() */
 
 
 

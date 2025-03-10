@@ -1,22 +1,10 @@
 /*!*********************************************************************************************************************
-@file user_app1.h                                                                
-@brief Header file for user_app1
-
-----------------------------------------------------------------------------------------------------------------------
-To start a new task using this user_app1 as a template:
-1. Follow the instructions at the top of user_app1.c
-2. Use ctrl-h to find and replace all instances of "user_app1" with "yournewtaskname"
-3. Use ctrl-h to find and replace all instances of "UserApp2" with "YourNewTaskName"
-4. Use ctrl-h to find and replace all instances of "USER_APP2" with "YOUR_NEW_TASK_NAME"
-5. Add #include yournewtaskname.h" to configuration.h
-6. Add/update any special configurations required in configuration.h (e.g. peripheral assignment and setup values)
-7. Delete this text (between the dashed lines)
-----------------------------------------------------------------------------------------------------------------------
-
+@file ant_radio.h                                                                
+@brief Header file for ant_radio.c
 **********************************************************************************************************************/
 
-#ifndef __USER_APP2_H
-#define __USER_APP2_H
+#ifndef __ANT_RADIO_H
+#define __ANT_RADIO_H
 
 /**********************************************************************************************************************
 Type Definitions
@@ -30,13 +18,13 @@ Function Declarations
 /*------------------------------------------------------------------------------------------------------------------*/
 /*! @publicsection */                                                                                            
 /*--------------------------------------------------------------------------------------------------------------------*/
-void UserApp2_IntializeANT(void);
+void AntRadio_IntializeANT(void);
 
 /*------------------------------------------------------------------------------------------------------------------*/
 /*! @protectedsection */                                                                                            
 /*--------------------------------------------------------------------------------------------------------------------*/
-void UserApp2Initialize(void);
-void UserApp2RunActiveState(void);
+void AntRadioInitialize(void);
+void AntRadioRunActiveState(void);
 
 
 /*------------------------------------------------------------------------------------------------------------------*/
@@ -47,13 +35,13 @@ void UserApp2RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp2SM_Idle(void);    
-static void UserApp2SM_Error(void);         
-static void UserApp2SM_WaitAntReady(void);
-static void UserApp2SM_WaitChannelOpen(void);
-static void UserApp2SM_ChannelOpen(void);
-static void UserApp2SM_WaitChannelClose(void);
-static void UserApp2SM_ChannelAwaitConnection(void);
+static void AntRadioSM_Idle(void);    
+static void AntRadioSM_Error(void);         
+static void AntRadioSM_WaitAntReady(void);
+static void AntRadioSM_WaitChannelOpen(void);
+static void AntRadioSM_ChannelOpen(void);
+static void AntRadioSM_WaitChannelClose(void);
+static void AntRadioSM_ChannelAwaitConnection(void);
 
 
 /**********************************************************************************************************************
@@ -73,7 +61,7 @@ Constants / Definitions
 #define U32_TIMEOUT_CLOSE_CHANNEL 5000
 
 
-#endif /* __USER_APP2_H */
+#endif /* __ANT_RADIO_H */
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* End of File                                                                                                        */
