@@ -106,6 +106,8 @@ State_t currentState = STATE_INIT;
 void enterInit(State_t prevState) {}
 
 void enterRunGame(State_t prevState) {
+  intializeLinearFeedbackShiftRegister();
+  
   LcdClearChars(LINE1_START_ADDR, 20);
   LcdClearChars(LINE2_START_ADDR, 20);
   LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
@@ -204,12 +206,10 @@ bool getANTInput() {
 }
 
 int linearFeedbackShiftRegister() {
-  bool newBit;
-  for (u8 u8Index = 32; u8Index != 0; u8Index--) {
-    newBit = (UserApp1_u32LSFRValue ^ (UserApp1_u32LSFRValue >> 1) ^ (UserApp1_u32LSFRValue >> 22) ^ (UserApp1_u32LSFRValue >> 31)) & 1;
-    UserApp1_u32LSFRValue >>= 1;
-    UserApp1_u32LSFRValue |= (u32)newBit << 31;
-  }
+  bool newBit = (UserApp1_u32LSFRValue ^ (UserApp1_u32LSFRValue >> 1) ^ (UserApp1_u32LSFRValue >> 22) ^ (UserApp1_u32LSFRValue >> 31)) & 1;
+  UserApp1_u32LSFRValue >>= 1;
+  UserApp1_u32LSFRValue |= (u32)newBit << 31;
+
   return newBit;
 }
 
@@ -235,8 +235,6 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  intializeLinearFeedbackShiftRegister();
-
   LcdCommand(LCD_CLEAR_CMD);
   LcdCommand(LCD_FUNCTION_CMD);     //required for custom characters to function
 
