@@ -51,7 +51,6 @@ Variable names shall start with "AntRadio_<type>" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type AntRadio_pfStateMachine;               /*!< @brief The state machine function pointer */
 static u32 AntRadio_u32Timeout;
-static u32 AntRadio_u32TickMsgCount = 0;
 
 //static u32 AntRadio_u32Timeout;                           /*!< @brief Timeout counter used across states */
 
@@ -228,8 +227,6 @@ void AntRadioSM_ChannelOpen(void) {
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) != ANT_OPEN) 
   {
     u8LastState = 0xff;
-    LedOff(BLUE);
-    LedOn(GREEN);
     
     AntRadio_u32Timeout = G_u32SystemTime1ms;
     AntRadio_pfStateMachine = AntRadioSM_WaitChannelClose;
@@ -240,7 +237,7 @@ void AntRadioSM_ChannelOpen(void) {
     //DebugPrintf("Message");
     if (G_eAntApiCurrentMessageClass == ANT_DATA)
     {
-      LedOff(PURPLE);
+      LedOff(YELLOW);
       u8LastState = 0xff;
       static bool bGotNewData = FALSE;
 
@@ -249,51 +246,23 @@ void AntRadioSM_ChannelOpen(void) {
         if (G_au8AntApiCurrentMessageBytes[i] != au8LastAntData[i]){
           bGotNewData = TRUE;
           au8LastAntData[i] = G_au8AntApiCurrentMessageBytes[i];
-          au8DataContent[2 * i] = HexToASCIICharLower(G_au8AntApiCurrentMessageBytes[i] >> 4);
-          au8DataContent[2*i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] & 0xf);
+          //au8DataContent[2 * i] = HexToASCIICharLower(G_au8AntApiCurrentMessageBytes[i] >> 4);
+          //au8DataContent[2*i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] & 0xf);
         }
       }
-      
-
       if (bGotNewData) {
         bGotNewData = FALSE;
-        DebugPrintf(au8DataContent);
-        
+        //DebugPrintf(au8DataContent);
         G_u32AntRadioANTInfo |= 0x2;
       }
     }
     else if (G_eAntApiCurrentMessageClass == ANT_TICK)
     {
-      AntRadio_u32TickMsgCount++;
       if (u8LastState != G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX])
       {
-        u8LastState = G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX];
-        au8TickMessage[6] = HexToASCIICharLower(u8LastState);
-        DebugPrintf(au8TickMessage);
-
-        switch (u8LastState)
+        if (G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX] == EVENT_RX_FAIL)
         {
-          case EVENT_RX_FAIL:
-          {
-            LedOn(PURPLE);
-            break;
-          }
-          case EVENT_RX_FAIL_GO_TO_SEARCH:
-          {
-            LedOff(BLUE);
-            LedOn(GREEN);
-            break;
-          }
-          case EVENT_RX_SEARCH_TIMEOUT:
-          {
-            DebugPrintf("Search timeout\r\n");
-            break;
-          }
-          default:
-          {
-            DebugPrintf("Unexpected Event\r\n");
-            break;
-          }
+          LedOn(YELLOW);
         }
       }
     }
@@ -316,7 +285,6 @@ static void AntRadioSM_WaitChannelClose(void) {
 
   if ( IsTimeUp(&AntRadio_u32Timeout, U32_TIMEOUT_CLOSE_CHANNEL))
   {
-    LedOff(GREEN);
     LedBlink(RED, LED_4HZ);
 
     AntRadio_pfStateMachine = AntRadioSM_Error;

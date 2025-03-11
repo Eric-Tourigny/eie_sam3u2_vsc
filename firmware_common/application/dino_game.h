@@ -33,13 +33,15 @@ enum {
         LOCAL_PLAY = 0,
         WIRELESS_PLAY,
         BUTTON_LOCATIONS,
-        PLAY_AGAIN,
-        RETURN_TO_MENU
+        PLAY_AGAIN_NORMAL,
+        RETURN_TO_MENU,
+        PLAY_AGAIN_ANT
     } typedef MenuPage_t;
 
     enum {
         MAIN_MENU = 0,
-        PLAY_AGAIN_MENU
+        PLAY_AGAIN_NORMAL_MENU,
+        PLAY_AGAIN_ANT_MENU
     } typedef MenuState_t;
 
 

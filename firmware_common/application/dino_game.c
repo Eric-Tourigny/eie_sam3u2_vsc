@@ -84,7 +84,8 @@ static u8 menuPrompts[][2][21] = {
 
 static u8 menuLoops[][4] = {
   {LOCAL_PLAY, WIRELESS_PLAY, BUTTON_LOCATIONS, 0xff},
-  {PLAY_AGAIN, RETURN_TO_MENU, BUTTON_LOCATIONS, 0xff}
+  {PLAY_AGAIN_NORMAL, RETURN_TO_MENU, BUTTON_LOCATIONS, 0xff},
+  {PLAY_AGAIN_ANT, RETURN_TO_MENU, BUTTON_LOCATIONS, 0xff}
 };
 
 
@@ -403,8 +404,10 @@ void DinoGameSM_CheckMenu() {
 }
 
 void DinoGameSM_CrashAnimation() {
-  
-  currentMenu = PLAY_AGAIN_MENU;
+  if (DinoGame_checkInputFunction == getANTInput)
+    currentMenu = PLAY_AGAIN_ANT_MENU;
+  else
+    currentMenu = PLAY_AGAIN_NORMAL_MENU;
   gotoState(STATE_CHECK_MENU);
 }
 
