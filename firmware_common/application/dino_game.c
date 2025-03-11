@@ -282,6 +282,7 @@ void DinoGameInitialize(void)
   /* If good initialization, set state to Idle */
   if( 1 )
   {
+    currentMenu = MAIN_MENU;
     gotoState(STATE_CHECK_MENU);
   }
   else
@@ -402,6 +403,8 @@ void DinoGameSM_CheckMenu() {
 }
 
 void DinoGameSM_CrashAnimation() {
+  
+  currentMenu = PLAY_AGAIN_MENU;
   gotoState(STATE_CHECK_MENU);
 }
 
@@ -412,6 +415,7 @@ void DinoGameSM_WaitANTReady() {
     gotoState(STATE_RUN_GAME);
   } else if (G_u32AntRadioANTInfo & 0x2) {
     G_u32AntRadioANTInfo = 0;
+    currentMenu = MAIN_MENU;
     gotoState(STATE_CHECK_MENU);
   }
 }
