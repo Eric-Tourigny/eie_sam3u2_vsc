@@ -255,7 +255,7 @@ void LcdModifyCustomChar(u8 u8charNum_, u8* u8bitMap_)
   /* Queue the message */
   TwiWriteData(U8_LCD_ADDRESS, U8_LCD_CUSTOM_CHAR_SIZE + 1, au8LCDCustomCharacter, TWI_STOP);
 
-} /* end CreateCustomChar() */
+} /* end LcdModifyCustomChar() */
 
 
 

@@ -116,7 +116,7 @@ space can be used for scrolling displays.
 void LcdCommand(u8 u8Command_);
 void LcdClearChars(u8 u8Address_, u8 u8CharactersToClear_);
 void LcdMessage(u8 u8Address_, u8* pu8Message_);
-void CreateCustomChar(u8 u8charNum_, u8* u8bitMap_);
+void LcdModifyCustomChar(u8 u8charNum_, u8* u8bitMap_);
 void LcdPutChar(u8 u8Address_, u8 u8Char_);
 
 

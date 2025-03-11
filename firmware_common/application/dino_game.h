@@ -21,6 +21,13 @@ To start a new task using this dino_game as a template:
 /**********************************************************************************************************************
 Type Definitions
 **********************************************************************************************************************/
+enum { 
+    STATE_INIT = 0,
+    STATE_RUN_GAME,
+    STATE_CHECK_MENU,
+    STATE_CRASH_ANIMATION,
+    STATE_WAIT_ANT_READY,
+  } typedef State_t;
 
 
 /**********************************************************************************************************************
@@ -37,6 +44,8 @@ Function Declarations
 /*--------------------------------------------------------------------------------------------------------------------*/
 void DinoGameInitialize(void);
 void DinoGameRunActiveState(void);
+int linearFeedbackShiftRegister(void);
+int intializeLinearFeedbackShiftRegister(void);
 
 
 /*------------------------------------------------------------------------------------------------------------------*/
@@ -69,18 +78,6 @@ Constants / Definitions
 
 #define   CACTUS_PATTERN        {0x04, 0x05, 0x15, 0x15, 0x17, 0x1C, 0x04, 0x04}    /*Custom character pattern for the cactus*/
 #define   DINO_PATTERN          {0x00, 0x03, 0x05, 0x17, 0x1E, 0x1F, 0x0E, 0x0A}    /*Custom character patterm for the dino*/
-
-/* ANT Constants*/
-
-#define U8_ANT_CHANNEL_USERAPP (u8)ANT_CHANNEL_0 /* Channel 0 – 7 */
-#define U8_ANT_DEVICE_LO_USERAPP (u8)0x22 /* Low byte of two-byte Device # */
-#define U8_ANT_DEVICE_HI_USERAPP (u8)0x16 /* High byte of two-byte Device # */
-#define U8_ANT_DEVICE_TYPE_USERAPP (u8)1 /* 1 – 255 */
-#define U8_ANT_TRANSMISSION_TYPE_USERAPP (u8)1 /* 1-127 (MSB is pairing bit) */
-#define U8_ANT_CHANNEL_PERIOD_LO_USERAPP (u8)0x00 /* Low byte of two-byte channel period */
-#define U8_ANT_CHANNEL_PERIOD_HI_USERAPP (u8)0x20 /* High byte of two-byte channel period */
-#define U8_ANT_FREQUENCY_USERAPP (u8)50 /* 2400MHz + this number 0 – 99 */
-#define U8_ANT_TX_POWER_USERAPP RADIO_TX_POWER_4DBM /* RADIO_TX_POWER_xxx */
 
 
 #endif /* __DINO_GAME_H */

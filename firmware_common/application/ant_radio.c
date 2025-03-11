@@ -52,7 +52,6 @@ Variable names shall start with "AntRadio_<type>" and be declared as static.
 static fnCode_type AntRadio_pfStateMachine;               /*!< @brief The state machine function pointer */
 static u32 AntRadio_u32Timeout;
 static u32 AntRadio_u32TickMsgCount = 0;
-static u32 AntRadio_u32DataMsgCount = 0;
 
 //static u32 AntRadio_u32Timeout;                           /*!< @brief Timeout counter used across states */
 
@@ -90,7 +89,7 @@ void AntRadioInitialize(void)
 }
 
 
-void AntRadioInitializeANT(void) {
+void AntRadio_IntializeANT(void) {
    AntAssignChannelInfoType sChannelInfo;
 
   if(AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_UNCONFIGURED)
@@ -221,11 +220,6 @@ void AntRadioSM_ChannelOpen(void) {
   static u8 au8TickMessage[] = "EVENT x\n\r";
   static u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
   static u8 au8LastAntData[ ANT_APPLICATION_MESSAGE_BYTES ] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-  static u8 au8TestMessage[] = {0, 0, 0, 0, 0xa5, 0, 0, 0};
-  bool bGotNewData;
-
-
-
 
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) != ANT_OPEN) 
   {

@@ -1,22 +1,6 @@
 /*!*********************************************************************************************************************
 @file dino_game.c                                                                
-@brief User's tasks / applications are written here.  This description
-should be replaced by something specific to the task.
-
-----------------------------------------------------------------------------------------------------------------------
-To start a new task using this dino_game as a template:
- 1. Copy both dino_game.c and dino_game.h to the Application directory
- 2. Rename the files yournewtaskname.c and yournewtaskname.h
- 3. Add yournewtaskname.c and yournewtaskname.h to the Application Include and Source groups in the IAR project
- 4. Use ctrl-h (make sure "Match Case" is checked) to find and replace all instances of "dino_game" with "yournewtaskname"
- 5. Use ctrl-h to find and replace all instances of "DinoGame" with "YourNewTaskName"
- 6. Use ctrl-h to find and replace all instances of "DINO_GAME" with "YOUR_NEW_TASK_NAME"
- 7. Add a call to YourNewTaskNameInitialize() in the init section of main
- 8. Add a call to YourNewTaskNameRunActiveState() in the Super Loop section of main
- 9. Update yournewtaskname.h per the instructions at the top of yournewtaskname.h
-10. Delete this text (between the dashed lines) and update the Description below to describe your task
-----------------------------------------------------------------------------------------------------------------------
-
+@brief Controls lcd screen and gets information from buttons or form ant_radio.c to run the dino game
 ------------------------------------------------------------------------------------------------------------------------
 GLOBALS
 - NONE
@@ -25,7 +9,7 @@ CONSTANTS
 - NONE
 
 TYPES
-- NONE
+- State_t - represents current state machine state for the game
 
 PUBLIC FUNCTIONS
 - NONE
@@ -55,7 +39,7 @@ extern volatile u32 G_u32SystemFlags;                     /*!< @brief From main.
 extern volatile u32 G_u32ApplicationFlags;                /*!< @brief From main.c */
 
 /* ANT Radio */
-extern volatile G_u32AntRadioANTInfo;
+extern volatile u32 G_u32AntRadioANTInfo;
 
 
 /***********************************************************************************************************************
@@ -74,10 +58,10 @@ static s16 DinoGame_s16DinoVelocity = 0;
 static u8 (*DinoGame_u8DinoBottomMask)[8] = DinoGame_u8cactusBitmaps + 11;
 static u8 (*DinoGame_u8DinoTopMask)[8] = DinoGame_u8cactusBitmaps + 11;
 static u8 DinoGame_u8FramesToNextCactus = 5;
-
 static u32 DinoGame_u32LSFRValue;
 
-bool (*DinoGame_checkInputFunction)();
+static bool (*DinoGame_checkInputFunction)();
+static State_t DinoGame_currentState = STATE_INIT;
 
 /**********************************************************************************************************************
 Function Definitions
@@ -90,18 +74,6 @@ Function Definitions
 /*--------------------------------------------------------------------------------------------------------------------*/
 /*! @protectedsection */                                                                                            
 /*--------------------------------------------------------------------------------------------------------------------*/
-
-
-
-enum { 
-  STATE_INIT = 0,
-  STATE_RUN_GAME,
-  STATE_CHECK_MENU,
-  STATE_CRASH_ANIMATION,
-  STATE_WAIT_ANT_READY,
-} typedef State_t;
-
-State_t currentState = STATE_INIT;
 
 void enterInit(State_t prevState) {}
 
@@ -135,7 +107,7 @@ void enterCheckMenu(State_t prevState) {
 void enterCrashAnimation(State_t prevState) {}
 
 void enterWaitANTReady(State_t prevState) {
-  AntRadioInitializeANT();
+  AntRadio_IntializeANT();
 }
 
 void (*stateTransition[])(State_t) = {
@@ -155,9 +127,9 @@ void (*stateFunctionArray[])(void) = {
 };
 
 void gotoState(State_t targetState) {
-  stateTransition[targetState](currentState);
-  currentState = targetState;
-  DinoGame_pfStateMachine = stateFunctionArray[currentState];
+  stateTransition[targetState](DinoGame_currentState);
+  DinoGame_currentState = targetState;
+  DinoGame_pfStateMachine = stateFunctionArray[DinoGame_currentState];
 }
 
 
