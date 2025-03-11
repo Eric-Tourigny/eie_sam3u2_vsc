@@ -273,7 +273,6 @@ static void DinoGameSM_RunGame(void)
 {
   if(DinoGame_u8MillisecondCount-- == 0)
   {
-    static bool triedToJump;
     if (DinoGame_u8SubframeCount-- == 0)
     {
       shiftCactuses();
@@ -283,7 +282,9 @@ static void DinoGameSM_RunGame(void)
 
     updateCactusCustomCharacters();
 
-    triedToJump = DinoGame_checkInputFunction();
+    /* Dino jumps if it has reached the grouned*/
+    if (DinoGame_checkInputFunction() && DinoGame_s16DinoHeight <= 0)
+      DinoGame_s16DinoVelocity = 500;
 
     /* Updates dino height and sees if its reached the ground*/
     DinoGame_s16DinoHeight += DinoGame_s16DinoVelocity;
@@ -292,12 +293,6 @@ static void DinoGameSM_RunGame(void)
     {
       DinoGame_s16DinoHeight = 0;
       DinoGame_s16DinoVelocity = 0;
-
-      /* Dino can jump if its on the ground */
-      if (triedToJump)
-      {
-        DinoGame_s16DinoVelocity = 500;
-      }
     }
 
     u8 dino_pattern[8] = {};
