@@ -148,7 +148,7 @@ void shiftCactuses() {
   } else if (DinoGame_u8FramesToNextCactus == 0)
   {
     DinoGame_u8CactusPositions[19] = CACTUS_BACK_NUM;
-    DinoGame_u8FramesToNextCactus = 2 + linearFeedbackShiftRegister() + linearFeedbackShiftRegister();
+    DinoGame_u8FramesToNextCactus = MINIMUM_CACTUS_SPACES + 1 + linearFeedbackShiftRegister() + linearFeedbackShiftRegister();
   } else {
     DinoGame_u8CactusPositions[19] = ' ';
   }
