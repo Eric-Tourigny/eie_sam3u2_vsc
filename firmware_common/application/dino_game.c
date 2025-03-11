@@ -85,16 +85,18 @@ void enterRunGame(State_t prevState) {
   LcdPutChar(LINE1_START_ADDR, DINO_TOP_NUM);
   LcdPutChar(LINE2_START_ADDR, DINO_BOTTOM_NUM);
 
-  DinoGame_u8MillisecondCount = 0;
   for (u8 u8Index = 0; u8Index < 20; u8Index++)
     DinoGame_u8CactusPositions[u8Index] = ' ';
   DinoGame_u8CactusPositions[20] = '\0';  
+  DinoGame_u8FramesToNextCactus = 2;
+  for (u8 u8Index = 0; u8Index < 10; u8Index++)
+    shiftCactuses();
+  DinoGame_u8MillisecondCount = 0;
   DinoGame_u8SubframeCount = 0;
   DinoGame_s16DinoHeight = 0x0000;
   DinoGame_s16DinoVelocity = 0;
   DinoGame_u8DinoBottomMask = DinoGame_u8cactusBitmaps + 11;
   DinoGame_u8DinoTopMask = DinoGame_u8cactusBitmaps + 11;
-  DinoGame_u8FramesToNextCactus = 5;
 }
 
 void enterCheckMenu(State_t prevState) {
@@ -149,8 +151,6 @@ void shiftCactuses() {
   } else {
     DinoGame_u8CactusPositions[19] = ' ';
   }
-
-  LcdMessage(LINE2_START_ADDR + 1, DinoGame_u8CactusPositions + 1);
 }
 
 void updateCactusCustomCharacters() {
@@ -187,6 +187,10 @@ int linearFeedbackShiftRegister() {
 
 int intializeLinearFeedbackShiftRegister() {
   DinoGame_u32LSFRValue = G_u32SystemTime1ms;
+  // Repeatedly call to give similar starting values time to diverge
+  for (u8 u8Index = 100; u8Index > 0; u8Index--) {
+    linearFeedbackShiftRegister();
+  }
 }
 
 
@@ -272,6 +276,7 @@ static void DinoGameSM_RunGame(void)
     if (DinoGame_u8SubframeCount-- == 0)
     {
       shiftCactuses();
+      LcdMessage(LINE2_START_ADDR + 1, DinoGame_u8CactusPositions + 1);
       DinoGame_u8SubframeCount = U8_FRAME_SUBFRAMES;
     }
 
