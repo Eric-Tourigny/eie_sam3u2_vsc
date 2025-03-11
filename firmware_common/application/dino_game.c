@@ -99,15 +99,21 @@ void wirelessPlay() {
   gotoState(STATE_WAIT_ANT_READY);
 }
 
-void mainMenu() {
+void mainMenuFromLocal() {
   currentMenu = MAIN_MENU;
+  currentMenuPageNumber = 0;
+  changeMenu();
+}
+
+void mainMenuFromANT() {
+  mainMenuFromLocal();
 }
 
 
 static void (*(menuCheckers[][5]))() = {
   {localPlay, wirelessPlay},
-  {localPlay, mainMenu},
-  {wirelessPlay, mainMenu}
+  {localPlay, mainMenuFromLocal},
+  {wirelessPlay, mainMenuFromANT}
 };
 
 /**********************************************************************************************************************
@@ -405,7 +411,7 @@ void DinoGameSM_CheckMenu() {
 
 void DinoGameSM_CrashAnimation() {
   if (DinoGame_checkInputFunction == getANTInput)
-    currentMenu = PLAY_AGAIN_ANT_MENU;
+    currentMenu = PLAY_AGAIN_NORMAL_MENU;
   else
     currentMenu = PLAY_AGAIN_NORMAL_MENU;
   gotoState(STATE_CHECK_MENU);
