@@ -59,10 +59,55 @@ static u8 (*DinoGame_u8DinoBottomMask)[8] = DinoGame_u8cactusBitmaps + 11;
 static u8 (*DinoGame_u8DinoTopMask)[8] = DinoGame_u8cactusBitmaps + 11;
 static u8 DinoGame_u8FramesToNextCactus = 5;
 static u32 DinoGame_u32LSFRValue;
-
+static u32 checkMenuTime;
+static u8 currentMenuPageNumber;
 
 static bool (*DinoGame_checkInputFunction)();
 static State_t DinoGame_currentState = STATE_INIT;
+
+static MenuState_t currentMenu;
+
+static u8 menuPrompts[][2][21] = {
+  {"Press BUTTON 0 for  ",
+   "local play,         "},
+  {"Or press BUTTON 1   ",
+   "to play wirelessly! "},
+  {"0     1             ",
+   "|     |             "},
+  {"Press BUTTON 0 to   ",
+   "play locally again  "},
+  {"Or Press BUTTON 1 to",
+   "return to main menu "},
+  {"Press BUTTON 0 to   ",
+   "play wirelessly again"}
+};
+
+static u8 menuLoops[][4] = {
+  {LOCAL_PLAY, WIRELESS_PLAY, BUTTON_LOCATIONS, 0xff},
+  {PLAY_AGAIN, RETURN_TO_MENU, BUTTON_LOCATIONS, 0xff}
+};
+
+
+void localPlay() {
+  DinoGame_checkInputFunction = getButtonInput;
+  gotoState(STATE_RUN_GAME);
+}
+
+void wirelessPlay() {
+  DinoGame_checkInputFunction = getANTInput;
+  gotoState(STATE_WAIT_ANT_READY);
+}
+
+void mainMenu() {
+  currentMenu = MAIN_MENU;
+}
+
+
+static void (*(menuCheckers[][5]))() = {
+  {localPlay, wirelessPlay},
+  {localPlay, mainMenu},
+  {wirelessPlay, mainMenu}
+};
 
 /**********************************************************************************************************************
 Function Definitions
@@ -101,10 +146,8 @@ void enterRunGame(State_t prevState) {
 }
 
 void enterCheckMenu(State_t prevState) {
-  LcdClearChars(LINE1_START_ADDR, 20);
-  LcdClearChars(LINE2_START_ADDR, 20);
-  LcdMessage(LINE1_START_ADDR, "Press BUTTON 0 to");
-  LcdMessage(LINE2_START_ADDR, "begin");
+  currentMenuPageNumber = 0;
+  changeMenu();
 }
 
 void enterCrashAnimation(State_t prevState) {}
@@ -185,11 +228,24 @@ int linearFeedbackShiftRegister() {
   return newBit;
 }
 
-int intializeLinearFeedbackShiftRegister() {
+void intializeLinearFeedbackShiftRegister() {
   DinoGame_u32LSFRValue = G_u32SystemTime1ms;
   // Repeatedly call to give similar starting values time to diverge
   for (u8 u8Index = 100; u8Index > 0; u8Index--) {
     linearFeedbackShiftRegister();
+  }
+}
+
+void changeMenu() {
+  MenuPage_t currentPage = menuLoops[currentMenu][currentMenuPageNumber];
+  if (currentPage == 0xff) {
+    currentMenuPageNumber = 0;
+    changeMenu();
+  } else {
+    LcdMessage(LINE1_START_ADDR, menuPrompts[currentPage][0]);
+    LcdMessage(LINE2_START_ADDR, menuPrompts[currentPage][1]);
+    currentMenuPageNumber++;
+    checkMenuTime = G_u32SystemTime1ms;
   }
 }
 
@@ -333,16 +389,16 @@ static void DinoGameSM_RunGame(void)
      
 
 void DinoGameSM_CheckMenu() {
-  if (WasButtonPressed(BUTTON0)) {
-    ButtonAcknowledge(BUTTON0);
-    DinoGame_checkInputFunction = getButtonInput;
-    gotoState(STATE_RUN_GAME);
+  u8 u8Index = 0;
+  while (menuCheckers[currentMenu][u8Index]) {
+    if (WasButtonPressed(u8Index)) {
+      ButtonAcknowledge(u8Index);
+      menuCheckers[currentMenu][u8Index]();
+    }
+    u8Index++;
   }
-  if (WasButtonPressed(BUTTON1)) {
-    ButtonAcknowledge(BUTTON1);
-    DinoGame_checkInputFunction = getANTInput;
-    gotoState(STATE_WAIT_ANT_READY);
-  }
+  if (IsTimeUp(&checkMenuTime, MENU_TIME))
+    changeMenu();
 }
 
 void DinoGameSM_CrashAnimation() {

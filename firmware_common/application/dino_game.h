@@ -29,6 +29,19 @@ enum {
     STATE_WAIT_ANT_READY,
   } typedef State_t;
 
+    enum {
+        LOCAL_PLAY = 0,
+        WIRELESS_PLAY,
+        BUTTON_LOCATIONS,
+        PLAY_AGAIN,
+        RETURN_TO_MENU
+    } typedef MenuPage_t;
+
+    enum {
+        MAIN_MENU = 0,
+        PLAY_AGAIN_MENU
+    } typedef MenuState_t;
+
 
 /**********************************************************************************************************************
 Function Declarations
@@ -45,12 +58,18 @@ Function Declarations
 void DinoGameInitialize(void);
 void DinoGameRunActiveState(void);
 int linearFeedbackShiftRegister(void);
-int intializeLinearFeedbackShiftRegister(void);
+void intializeLinearFeedbackShiftRegister(void);
+
 
 
 /*------------------------------------------------------------------------------------------------------------------*/
 /*! @privatesection */                                                                                            
 /*--------------------------------------------------------------------------------------------------------------------*/
+bool getButtonInput(void);
+bool getANTInput(void);
+void gotoState(State_t);
+void shiftCactuses(void);
+void changeMenu(void);
 
 
 /***********************************************************************************************************************
@@ -80,6 +99,7 @@ Constants / Definitions
 #define   DINO_PATTERN          {0x00, 0x03, 0x05, 0x17, 0x1E, 0x1F, 0x0E, 0x0A}    /*Custom character patterm for the dino*/
 
 #define   MINIMUM_CACTUS_SPACES     3
+#define   MENU_TIME                 2000
 
 
 #endif /* __DINO_GAME_H */
