@@ -113,7 +113,8 @@ void AntRadio_IntializeANT(void) {
       sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
     }
     
-    LedOn(RED);
+    LcdMessage(LINE1_START_ADDR, INTIALIZE_ANT_MESSAGE_1);
+    LcdMessage(LINE2_START_ADDR, INTIALIZE_ANT_MESSAGE_2);
   }
 
 
@@ -176,8 +177,6 @@ void AntRadioSM_WaitAntReady(void)
 {
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_CONFIGURED) 
   {
-    LedOff(RED);
-    LedOn(YELLOW);
     AntOpenChannelNumber(U8_ANT_CHANNEL_USERAPP);
     AntRadio_u32Timeout = G_u32SystemTime1ms;
     AntRadio_pfStateMachine = AntRadioSM_WaitChannelOpen;
@@ -192,26 +191,31 @@ void AntRadioSM_WaitChannelOpen(void)
 {
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_OPEN)
   {
-    LedOff(YELLOW);
-    LedOn(GREEN);
+    LcdMessage(LINE1_START_ADDR, WAIT_CHANNEL_OPEN_MESSAGE_1);
+    LcdMessage(LINE2_START_ADDR, WAIT_CHANNEL_OPEN_MESSAGE_2);
     AntRadio_pfStateMachine = AntRadioSM_ChannelAwaitConnection;
   }
 
   if (IsTimeUp(&AntRadio_u32Timeout, U32_TIMEOUT_OPEN_CHANNEL)) 
   {
+    LcdMessage(LINE1_START_ADDR, UNABLE_TO_OPEN_ANT_MESSAGE_1);
+    LcdMessage(LINE2_START_ADDR, UNABLE_TO_OPEN_ANT_MESSAGE_2);
     AntCloseChannelNumber(U8_ANT_CHANNEL_USERAPP);
-    LedOff(GREEN);
-    LedOn(YELLOW);
     AntRadio_pfStateMachine = AntRadioSM_Idle;
   }
 } /* end AntRadioSM_WaitChannelOpen */  
 
 void AntRadioSM_ChannelAwaitConnection(void) {
   if (AntReadAppMessageBuffer()) {
-    LedOff(GREEN);
-    LedOn(BLUE);
-    G_u32AntRadioANTInfo |= 1;
-    AntRadio_pfStateMachine = AntRadioSM_ChannelOpen;
+    if ( G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX] == EVENT_RX_SEARCH_TIMEOUT ) {
+      LcdMessage(LINE1_START_ADDR, SEARCH_TIMEOUT_ANT_MESSAGE_1);
+      LcdMessage(LINE2_START_ADDR, SEARCH_TIMEOUT_ANT_MESSAGE_2);
+      AntRadio_u32Timeout = G_u32SystemTime1ms;
+      AntRadio_pfStateMachine = AntRadioSM_WaitChannelClose;
+    } else {
+      G_u32AntRadioANTInfo |= 1;
+      AntRadio_pfStateMachine = AntRadioSM_ChannelOpen;
+    }
   }
 }
 
@@ -296,13 +300,18 @@ void AntRadioSM_ChannelOpen(void) {
   }
 }
 
+static void AntRadioSM_DisplayClose(void) {
+  if ( IsTimeUp(&AntRadio_u32Timeout, U32_TIMEOUT_DISPLAY_FAIL) ) {
+    G_u32AntRadioANTInfo |= 2;
+    AntRadio_pfStateMachine = AntRadioSM_Idle;
+  }
+}
+
 static void AntRadioSM_WaitChannelClose(void) {
   if (AntRadioStatusChannel(U8_ANT_CHANNEL_USERAPP) == ANT_CLOSED)
   {
-    LedOff(GREEN);
-    LedOn(YELLOW);
-
-    AntRadio_pfStateMachine = AntRadioSM_Idle;
+    AntRadio_u32Timeout = G_u32SystemTime1ms;
+    AntRadio_pfStateMachine = AntRadioSM_DisplayClose;
   }
 
   if ( IsTimeUp(&AntRadio_u32Timeout, U32_TIMEOUT_CLOSE_CHANNEL))

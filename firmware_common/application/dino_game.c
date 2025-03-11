@@ -408,7 +408,11 @@ void DinoGameSM_CrashAnimation() {
 
 void DinoGameSM_WaitANTReady() {
   if (G_u32AntRadioANTInfo & 0x1) {
+    G_u32AntRadioANTInfo = 0;
     gotoState(STATE_RUN_GAME);
+  } else if (G_u32AntRadioANTInfo & 0x2) {
+    G_u32AntRadioANTInfo = 0;
+    gotoState(STATE_CHECK_MENU);
   }
 }
 

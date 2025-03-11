@@ -40,6 +40,7 @@ static void AntRadioSM_Error(void);
 static void AntRadioSM_WaitAntReady(void);
 static void AntRadioSM_WaitChannelOpen(void);
 static void AntRadioSM_ChannelOpen(void);
+static void AntRadioSM_DisplayClose(void);
 static void AntRadioSM_WaitChannelClose(void);
 static void AntRadioSM_ChannelAwaitConnection(void);
 
@@ -59,6 +60,16 @@ Constants / Definitions
 
 #define U32_TIMEOUT_OPEN_CHANNEL 5000
 #define U32_TIMEOUT_CLOSE_CHANNEL 5000
+#define U32_TIMEOUT_DISPLAY_FAIL 2000
+
+#define INTIALIZE_ANT_MESSAGE_1             "Waiting for ANT to "
+#define INTIALIZE_ANT_MESSAGE_2             "configure...       "
+#define UNABLE_TO_OPEN_ANT_MESSAGE_1        "Unable to open ANT "
+#define UNABLE_TO_OPEN_ANT_MESSAGE_2        "channel            "
+#define WAIT_CHANNEL_OPEN_MESSAGE_1         "Searching for ANT  "
+#define WAIT_CHANNEL_OPEN_MESSAGE_2         "signal...          "
+#define SEARCH_TIMEOUT_ANT_MESSAGE_1        "Search timeout...  "
+#define SEARCH_TIMEOUT_ANT_MESSAGE_2        "Unable to connect. "
 
 
 #endif /* __ANT_RADIO_H */
