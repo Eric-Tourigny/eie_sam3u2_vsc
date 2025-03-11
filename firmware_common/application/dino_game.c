@@ -60,6 +60,7 @@ static u8 (*DinoGame_u8DinoTopMask)[8] = DinoGame_u8cactusBitmaps + 11;
 static u8 DinoGame_u8FramesToNextCactus = 5;
 static u32 DinoGame_u32LSFRValue;
 
+
 static bool (*DinoGame_checkInputFunction)();
 static State_t DinoGame_currentState = STATE_INIT;
 
@@ -161,7 +162,6 @@ void updateCactusCustomCharacters() {
   LcdModifyCustomChar(CACTUS_BACK_NUM, *u8cactusBackBitPattern);
   if (DinoGame_u8CactusPositions[0] == CACTUS_BACK_NUM) DinoGame_u8DinoBottomMask = u8cactusBackBitPattern;
 }
-
 
 bool getButtonInput() {
   bool buttonPressed = WasButtonPressed(BUTTON0);
@@ -273,6 +273,7 @@ static void DinoGameSM_RunGame(void)
 {
   if(DinoGame_u8MillisecondCount-- == 0)
   {
+    static bool triedToJump;
     if (DinoGame_u8SubframeCount-- == 0)
     {
       shiftCactuses();
@@ -282,6 +283,7 @@ static void DinoGameSM_RunGame(void)
 
     updateCactusCustomCharacters();
 
+    triedToJump = DinoGame_checkInputFunction();
 
     /* Updates dino height and sees if its reached the ground*/
     DinoGame_s16DinoHeight += DinoGame_s16DinoVelocity;
@@ -292,7 +294,7 @@ static void DinoGameSM_RunGame(void)
       DinoGame_s16DinoVelocity = 0;
 
       /* Dino can jump if its on the ground */
-      if (DinoGame_checkInputFunction())
+      if (triedToJump)
       {
         DinoGame_s16DinoVelocity = 500;
       }
