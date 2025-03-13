@@ -47,7 +47,7 @@ Global variable definitions with scope limited to this local application.
 Variable names shall start with "DinoGame_<type>" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type DinoGame_pfStateMachine;               /*!< @brief The state machine function pointer */
-//static u32 DinoGame_u32Timeout;                           /*!< @brief Timeout counter used across states */
+static u32 DinoGame_u32Timeout;                           /*!< @brief Timeout counter used across states */
 static u8 DinoGame_u8cactusBitmaps[12][8] = {{}, {}, {}, {}, {}, {}, CACTUS_PATTERN, {}, {}, {}, {}, {}};
 static u8 DinoGame_u8dino_pattern[8] = DINO_PATTERN;
 static u8 DinoGame_u8MillisecondCount = 0;
@@ -106,6 +106,7 @@ void mainMenuFromLocal() {
 }
 
 void mainMenuFromANT() {
+  DebugPrintf("HERE");
   mainMenuFromLocal();
 }
 
@@ -154,10 +155,16 @@ void enterRunGame(State_t prevState) {
 
 void enterCheckMenu(State_t prevState) {
   currentMenuPageNumber = 0;
+  DebugPrintf("HERE");
   changeMenu();
+  DebugPrintf("After");
 }
 
-void enterCrashAnimation(State_t prevState) {}
+void enterCrashAnimation(State_t prevState) {
+  DinoGame_u32Timeout = G_u32SystemTime1ms;
+  LedOff(LCD_BLUE);
+  LedOff(LCD_GREEN);
+}
 
 void enterWaitANTReady(State_t prevState) {
   AntRadio_IntializeANT();
@@ -400,6 +407,7 @@ void DinoGameSM_CheckMenu() {
   u8 u8Index = 0;
   while (menuCheckers[currentMenu][u8Index]) {
     if (WasButtonPressed(u8Index)) {
+      DebugPrintf("button pressed");
       ButtonAcknowledge(u8Index);
       menuCheckers[currentMenu][u8Index]();
     }
@@ -410,11 +418,16 @@ void DinoGameSM_CheckMenu() {
 }
 
 void DinoGameSM_CrashAnimation() {
-  if (DinoGame_checkInputFunction == getANTInput)
-    currentMenu = PLAY_AGAIN_NORMAL_MENU;
-  else
-    currentMenu = PLAY_AGAIN_NORMAL_MENU;
-  gotoState(STATE_CHECK_MENU);
+  if (IsTimeUp(&DinoGame_u32Timeout, 1000)) {
+    DebugPrintf("End of crash\n");
+    if (DinoGame_checkInputFunction == getANTInput)
+      currentMenu = MAIN_MENU;
+    else
+      currentMenu = PLAY_AGAIN_NORMAL_MENU;
+    LedOn(LCD_BLUE);
+    LedOn(LCD_GREEN);
+    gotoState(STATE_CHECK_MENU);
+  }
 }
 
 
