@@ -155,7 +155,7 @@ void enterRunGame(State_t prevState) {
 
 void enterCheckMenu(State_t prevState) {
   currentMenuPageNumber = 0;
-  DebugPrintf("HERE");
+  DebugPrintf("Here");
   changeMenu();
   DebugPrintf("After");
 }
@@ -420,10 +420,11 @@ void DinoGameSM_CheckMenu() {
 void DinoGameSM_CrashAnimation() {
   if (IsTimeUp(&DinoGame_u32Timeout, 1000)) {
     DebugPrintf("End of crash\n");
-    if (DinoGame_checkInputFunction == getANTInput)
+    if (DinoGame_checkInputFunction == getANTInput) {
       currentMenu = MAIN_MENU;
-    else
-      currentMenu = PLAY_AGAIN_NORMAL_MENU;
+    } else{
+      currentMenu = MAIN_MENU;
+    }
     LedOn(LCD_BLUE);
     LedOn(LCD_GREEN);
     gotoState(STATE_CHECK_MENU);

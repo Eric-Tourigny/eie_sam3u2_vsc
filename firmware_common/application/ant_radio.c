@@ -114,21 +114,26 @@ void AntRadio_IntializeANT(void) {
     
     LcdMessage(LINE1_START_ADDR, INTIALIZE_ANT_MESSAGE_1);
     LcdMessage(LINE2_START_ADDR, INTIALIZE_ANT_MESSAGE_2);
+    /* If good initialization, set state to Idle */
+    if( AntAssignChannel(&sChannelInfo) )
+    {
+      AntRadio_pfStateMachine = AntRadioSM_WaitAntReady;
+    }
+    else
+    {
+      /* The task isn't properly initialized, so shut it down and don't run */
+      AntRadio_pfStateMachine = AntRadioSM_Error;
+    }
+  } else {
+    AntRadio_pfStateMachine = AntRadioSM_ChannelAwaitConnection;
   }
 
-
-  /* If good initialization, set state to Idle */
-  if( AntAssignChannel(&sChannelInfo) )
-  {
-    AntRadio_pfStateMachine = AntRadioSM_WaitAntReady;
-  }
-  else
-  {
-    /* The task isn't properly initialized, so shut it down and don't run */
-    AntRadio_pfStateMachine = AntRadioSM_Error;
-  }
 
 } /* end AntRadioInitialize() */
+
+void AntRadio_CloseANT() {
+  AntCloseChannelNumber(U8_ANT_CHANNEL_USERAPP);
+}
 
   
 /*!----------------------------------------------------------------------------------------------------------------------
