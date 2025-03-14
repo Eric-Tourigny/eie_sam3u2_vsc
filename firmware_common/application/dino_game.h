@@ -89,7 +89,7 @@ static void DinoGameSM_WaitANTOpen(void);
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
-#define   U8_SUBFRAME_MILLISECONDS      (u8)200 /*How many milliseconds between each subframe*/
+#define   U8_SUBFRAME_MILLISECONDS      (u8)100 /*How many milliseconds between each subframe*/
 #define   U8_FRAME_SUBFRAMES            (u8)5   /*How many subframes in each frame*/
 
 #define   DINO_TOP_NUM          (u8)1   /*Custom character number for the top of the dino (top leftmost tile)*/
