@@ -371,6 +371,7 @@ static void DinoGameSM_RunGame(void)
     /* Dino height in pixels is dino height divided by 256 */
     u8 pixel_height = ((u16)DinoGame_s16DinoHeight) >> 8;
     
+    bool crashed = FALSE;
 
     /* Determines custom char pattern for bottom leftmost tile */
     for (u8 u8Index = 0; u8Index < 8; u8Index++)
@@ -378,7 +379,7 @@ static void DinoGameSM_RunGame(void)
       if ((s8)(7 - pixel_height - u8Index) >= 0) {
         dino_pattern[u8Index] = DinoGame_u8dino_pattern[u8Index + pixel_height] | (*DinoGame_u8DinoBottomMask)[u8Index];
         if (DinoGame_u8dino_pattern[u8Index + pixel_height] & (*DinoGame_u8DinoBottomMask)[u8Index]) {
-          gotoState(STATE_CRASH_ANIMATION);
+          crashed = TRUE;
         }
       }
       else
@@ -398,6 +399,10 @@ static void DinoGameSM_RunGame(void)
 
     LcdModifyCustomChar(DINO_TOP_NUM, dino_pattern);
 
+    if (crashed) {
+      gotoState(STATE_CRASH_ANIMATION);
+    }
+    
     DinoGame_u8MillisecondCount = U8_SUBFRAME_MILLISECONDS;
   } /* end of subframe */
 } /* end DinoGameSM_Idle() */
